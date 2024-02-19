@@ -1,0 +1,7 @@
+---
+name: ML102
+category: Interactive Apps
+subcategory: Servers
+role: batch_connect
+description: |
+  This app will launch a Jupyter Lab server for the ML102 workshop
