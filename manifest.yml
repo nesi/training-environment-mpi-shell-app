@@ -1,7 +1,7 @@
 ---
-name: ML102
+name: Intermediate shell for bioinformatics
 category: Interactive Apps
 subcategory: Servers
 role: batch_connect
 description: |
-  This app will launch a Jupyter Lab server for the ML102 workshop
+  This app will launch a Jupyter Lab server for the intermediate shell for bioinformatics workshop

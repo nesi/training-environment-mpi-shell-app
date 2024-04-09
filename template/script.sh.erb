@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
 
+# send all output to pod.log
 exec &> >(tee -a "${LOG_DIR}/pod.log")
 
-# Benchmark info
 echo "TIMING - Starting main script at: $(date)"
 
+# copying config file for debugging
 cp /ood/ondemand_config.py ./
 
 # Set working directory to home directory
 cd "${HOME}"
 
-#
-# Start Jupyter Notebook Server
-#
-
-# Benchmark info
 echo "TIMING - Starting jupyter at: $(date)"
 
-# Launch the Jupyter Notebook Server
 set -x
-rsync --ignore-existing -avz /opt/ml102_workshop/ ~/ml102_workshop/
+
+# copy data files
+# note: this will not overwrite files if they already exist, so changes won't
+#       be lost when restarting the app
+mkdir -p ~/shell4b
+rsync --ignore-existing -avz /var/lib/puzzles_da/ ~/shell4b/puzzles_da/
+rsync --ignore-existing -avz /var/lib/shell4b_data/ ~/shell4b/shell4b_data/
+
+# launch JupyterLab
 jupyter lab --config="/ood/ondemand_config.py"

@@ -1,3 +1,3 @@
-# NeSI training environment ML102 Jupyter app
+# NeSI training environment Intermediate Shell for Bioinformatics app
 
-JupyterLab app for running the ML102 workshop on the NeSI training environment.
+JupyterLab app for running Intermediate Shell for Bioinformatics on the NeSI training environment.

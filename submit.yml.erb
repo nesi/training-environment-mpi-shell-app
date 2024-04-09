@@ -16,8 +16,8 @@ script:
   wall_time: "<%= wall_time.to_i * 3600 %>"
   native:
     container:
-      name: "ml102"
-      image: "ghcr.io/nesi/training-environment-jupyter-ml102-app:v0.2.0"
+      name: "intermshell"
+      image: "ghcr.io/nesi/training-environment-jupyter-intermediate-shell-app:v0.1.0"
       command: ["/bin/bash","-l","<%= staged_root %>/job_script_content.sh"]
       working_dir: "<%= Etc.getpwnam(ENV['USER']).dir %>"
       restart_policy: 'OnFailure'
@@ -56,7 +56,7 @@ script:
             c.ServerApp.port_retries = 0
             c.ServerApp.open_browser = False
             c.ServerApp.allow_origin = '*'
-            c.ServerApp.root_dir = '<%= user.home %>/ml102_workshop'
+            c.ServerApp.root_dir = '<%= user.home %>/shell4b'
             c.ServerApp.disable_check_xsrf = True
           mount_path: '/ood'
     init_containers:
