@@ -1,5 +1,8 @@
 FROM ubuntu:22.04
 
+# run unminimise
+RUN yes | unminimize
+
 # install system dependencies
 # TODO: move ldap-utils, libnss-ldapd, libpam-ldapd, nscd, nslcd to base image??
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -10,6 +13,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         libnss-ldapd \
         libpam-ldapd \
         less \
+        locales \
+        man-db \
         nano \
         nodejs \
         nscd \
@@ -22,7 +27,10 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         vim \
         wget \
         zip \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && localedef -i en_NZ -c -f UTF-8 -A /usr/share/locale/locale.alias en_NZ.UTF-8
+
+ENV LANG en_NZ.utf8
 
 # download the required data into the container image and make sure permission are ok
 RUN wget -nv https://github.com/GenomicsAotearoa/shell-for-bioinformatics/releases/download/v2.0/puzzles_da.tar.gz \
