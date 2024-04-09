@@ -37,3 +37,6 @@ RUN wget -nv https://github.com/GenomicsAotearoa/shell-for-bioinformatics/releas
     && rm -f /var/lib/shell4b_data.tar.gz \
     && chown -R root:root /var/lib/shell4b_data \
     && chmod -R o+rX /var/lib/shell4b_data
+
+# install jupyterlab
+RUN pip3 --no-cache-dir install jupyterlab
