@@ -17,7 +17,7 @@ script:
   native:
     container:
       name: "intermshell"
-      image: "ghcr.io/nesi/training-environment-jupyter-intermediate-shell-app:v0.3.4"
+      image: "ghcr.io/nesi/training-environment-jupyter-intermediate-shell-app:v0.3.5"
       command: ["/bin/bash","-l","<%= staged_root %>/job_script_content.sh"]
       working_dir: "<%= Etc.getpwnam(ENV['USER']).dir %>"
       restart_policy: 'OnFailure'
@@ -49,31 +49,15 @@ script:
         destination_path: /etc/nsswitch.conf
     configmap:
       files:
-        - filename: "<%= configmap_filename %>"
+        - filename: 'k8_helper'
           data: |
-            c.ServerApp.ip = '0.0.0.0'
-            c.ServerApp.port = 8080
-            c.ServerApp.port_retries = 0
-            c.ServerApp.open_browser = False
-            c.ServerApp.allow_origin = '*'
-            c.ServerApp.root_dir = '<%= user.home %>'
-            c.ServerApp.disable_check_xsrf = True
-          mount_path: '/ood'
-    init_containers:
-    - name: "init-secret"
-      image: "<%= utility_img %>"
-      command: 
-      - "/bin/save_passwd_as_secret"
-      - "user-<%= user.name %>"
-    - name: "add-passwd-to-cfg"
-      image: "<%= utility_img %>"
-      command:
-      - "/bin/bash"
-      - "-c"
-      - "source /bin/passwd_from_secret; source /bin/create_salt_and_sha1; /bin/add_line_to_configmap \\\"<%= pwd_cfg %>\\\" <%= configmap_filename %>"
-    - name: "add-hostport-to-cfg"
-      image: "<%= utility_img %>"
-      command:
-      - "/bin/bash"
-      - "-c"
-      - "source /bin/find_host_port; /bin/add_line_to_configmap \\\"<%= host_port_cfg %>\\\" <%= configmap_filename %>"
+            #!/usr/bin/env bash
+
+            set -x
+
+            KEY=$1
+            VALUE=$(echo -n $2 | base64)
+            CFG="$(hostname)-secret"
+
+            kubectl get secret ${CFG} -o json | jq --arg key $KEY --arg value $VALUE '.data[$key] = $value'  | kubectl apply -f -
+          mount_path: '/opt/open_ondemand/helpers'
