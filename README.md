@@ -1,3 +1,3 @@
-# NeSI training environment Intermediate Shell for Bioinformatics app
+# NeSI training environment for MPI Bioinformatics app
 
-JupyterLab app for running Intermediate Shell for Bioinformatics on the NeSI training environment.
+JupyterLab app for running MPI Shell for Bioinformatics on the NeSI training environment.
