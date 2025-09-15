@@ -83,8 +83,8 @@ RUN wget http://opengene.org/fastp/fastp && \
     mv fastp /opt/ && \
 
 # Install porechop
-RUN git clone https://github.com/rrwick/Porechop.git
-    cd Porechop
+RUN git clone https://github.com/rrwick/Porechop.git && \
+    cd Porechop && \
     python3 setup.py install
 
 #create a symlink for python as hisat2 hashbangs are set for python and not python3
