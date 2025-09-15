@@ -94,4 +94,4 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 ENV PATH="/opt/venv/bin:$PATH"
 
 # copy data
-COPY docker/MPI/ /var/lib/MPI/
+# COPY docker/MPI/ /var/lib/MPI/
