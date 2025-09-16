@@ -92,9 +92,6 @@ RUN git clone https://github.com/rrwick/Porechop.git && \
     chmod a+x porechop && \
     mv porechop /opt/
 
-#create a symlink for python as hisat2 hashbangs are set for python and not python3
-RUN ln -s /usr/bin/python3 /usr/bin/python 
-
 # Set up environment variables for the virtual environment
 ENV PATH="/opt/venv/bin:$PATH"
 
