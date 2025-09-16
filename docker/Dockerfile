@@ -82,14 +82,15 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.
 # Install fastp  (1.0.1)
 RUN wget http://opengene.org/fastp/fastp && \
     chmod a+x fastp && \
-    mv fastp /opt/ && \
+    mv fastp /opt/
 
 # Clone and build Porechop
 RUN git clone https://github.com/rrwick/Porechop.git && \
     cd Porechop && \
     make && \
-    ln -s /Porechop/porechop-runner.py /opt/porechop && \
-    chmod +x /opt/porechop
+    ln -s /Porechop/porechop-runner.py porechop && \
+    chmod a+x porechop
+    mv porechop /opt/
 
 #create a symlink for python as hisat2 hashbangs are set for python and not python3
 RUN ln -s /usr/bin/python3 /usr/bin/python 
