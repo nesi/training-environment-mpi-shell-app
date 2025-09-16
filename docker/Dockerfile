@@ -23,6 +23,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         python-is-python3 \
         python3 \
         python3-pip \
+        python3-venv \
+        python3-distutils \
         rsync \
         unzip \
         vim \
@@ -58,7 +60,14 @@ RUN git clone https://github.com/nesi/training-environment-k8s-utils.git /opt/oo
 
 # install jupyterlab
 RUN pip3 --no-cache-dir install jupyterlab
-RUN python3 -m ensurepip
+
+# Install Python 3 and pip
+#RUN apt-get update && apt-get install -y \
+#    python3 \
+#    python3-pip \
+#    python3-venv \
+#    python3-distutils
+
 
 # Install Python-based tools in a virtual environment
 RUN python3 -m venv /opt/venv && \
