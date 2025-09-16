@@ -89,7 +89,7 @@ RUN git clone https://github.com/rrwick/Porechop.git && \
     cd Porechop && \
     make && \
     ln -s /Porechop/porechop-runner.py porechop && \
-    chmod a+x porechop
+    chmod a+x porechop && \
     mv porechop /opt/
 
 #create a symlink for python as hisat2 hashbangs are set for python and not python3
