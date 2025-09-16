@@ -61,14 +61,6 @@ RUN git clone https://github.com/nesi/training-environment-k8s-utils.git /opt/oo
 # install jupyterlab
 RUN pip3 --no-cache-dir install jupyterlab
 
-# Install Python 3 and pip
-#RUN apt-get update && apt-get install -y \
-#    python3 \
-#    python3-pip \
-#    python3-venv \
-#    python3-distutils
-
-
 # Install Python-based tools in a virtual environment
 RUN python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --upgrade pip && \
@@ -92,10 +84,12 @@ RUN wget http://opengene.org/fastp/fastp && \
     chmod a+x fastp && \
     mv fastp /opt/ && \
 
-# Install porechop
+# Clone and build Porechop
 RUN git clone https://github.com/rrwick/Porechop.git && \
     cd Porechop && \
-    python3 setup.py install
+    make && \
+    ln -s /Porechop/porechop-runner.py /opt/porechop && \
+    chmod +x /opt/porechop
 
 #create a symlink for python as hisat2 hashbangs are set for python and not python3
 RUN ln -s /usr/bin/python3 /usr/bin/python 
