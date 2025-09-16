@@ -58,7 +58,7 @@ RUN git clone https://github.com/nesi/training-environment-k8s-utils.git /opt/oo
 
 # install jupyterlab
 RUN pip3 --no-cache-dir install jupyterlab
-RUN apt install python3.10-venv
+RUN python3 -m ensurepip
 
 # Install Python-based tools in a virtual environment
 RUN python3 -m venv /opt/venv && \
