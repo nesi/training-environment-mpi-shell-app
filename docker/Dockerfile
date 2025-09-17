@@ -62,14 +62,13 @@ RUN git clone https://github.com/nesi/training-environment-k8s-utils.git /opt/oo
 RUN pip3 --no-cache-dir install jupyterlab
 
 # Install Python-based tools in a virtual environment
-RUN python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --upgrade pip && \
-    /opt/venv/bin/pip install && \
-    pycoQC && \
-    nanofilt && \
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install pycoQC \
+    && /opt/venv/bin/pip install nanofilt \
     # Create symlinks to the venv binaries
-    ln -s /opt/venv/bin/pycoQC /usr/local/bin/ && \
-    ln -s /opt/venv/bin/nanofilt /usr/local/bin/
+    && ln -s /opt/venv/bin/pycoQC /usr/local/bin/ \
+    && ln -s /opt/venv/bin/nanofilt /usr/local/bin/
 
 # Install FastQC
 RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
