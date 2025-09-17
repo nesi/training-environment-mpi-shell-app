@@ -17,7 +17,7 @@ script:
   native:
     container:
       name: "mpishell"
-      image: "ghcr.io/nesi/training-environment-mpi-shell-app:v0.0.1"
+      image: "ghcr.io/nesi/training-environment-mpi-shell-app:v0.0.2"
       command: ["/bin/bash","-l","<%= staged_root %>/job_script_content.sh"]
       working_dir: "<%= Etc.getpwnam(ENV['USER']).dir %>"
       restart_policy: 'OnFailure'
