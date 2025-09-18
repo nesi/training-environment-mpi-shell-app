@@ -4,7 +4,6 @@ FROM ubuntu:22.04
 RUN yes | unminimize
 
 # install system dependencies
-# TODO: move ldap-utils, libnss-ldapd, libpam-ldapd, nscd, nslcd to base image??
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         bioawk \
         curl \
@@ -68,7 +67,13 @@ RUN python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install nanofilt \
     # Create symlinks to the venv binaries
     && ln -s /opt/venv/bin/pycoQC /usr/local/bin/ \
-    && ln -s /opt/venv/bin/nanofilt /usr/local/bin/
+    && ln -s /opt/venv/bin/NanoFilt /usr/local/bin/ \
+    # porechop
+    && git clone https://github.com/rrwick/Porechop.git \
+    && cd Porechop \
+    && /opt/venv/bin/python3 setup.py install \
+    && chmod a+x porechop \
+    && ln -s porechop /usr/local/bin/
 
 # Install FastQC
 RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
@@ -81,15 +86,8 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.
 # Install fastp  (1.0.1)
 RUN wget http://opengene.org/fastp/fastp && \
     chmod a+x fastp && \
-    mv fastp /opt/
-
-# Clone and build Porechop
-RUN git clone https://github.com/rrwick/Porechop.git && \
-    cd Porechop && \
-    make && \
-    ln -s /Porechop/porechop-runner.py porechop && \
-    chmod a+x porechop && \
-    mv porechop /opt/
+    mv fastp /opt/ && \
+    ln -s /opt/fastp /usr/local/bin/fastp
 
 # Set up environment variables for the virtual environment
 ENV PATH="/opt/venv/bin:$PATH"
