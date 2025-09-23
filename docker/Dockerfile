@@ -34,10 +34,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
 
 ENV LANG en_NZ.utf8
 
-# make a dummy module command to avoid warnings from ondemand job_script_content.sh
-RUN echo "#!/bin/bash" > /bin/module \
-    && chmod +x /bin/module
-
 # install kubectl, required for running on the k8s cluster
 ARG KUBECTL_VERSION=v1.28.5
 RUN curl -LO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl \
