@@ -84,10 +84,10 @@ RUN wget http://opengene.org/fastp/fastp && \
     ln -s /opt/fastp /usr/local/bin/ \
 
 # porechop
-RUN git clone https://github.com/rrwick/Porechop.git \
-    && cd Porechop \
-    && /opt/venv/bin/python3 setup.py install \
-    && ln -s Porechop/porechop-runner.py /usr/local/bin/porechop
+#RUN git clone https://github.com/rrwick/Porechop.git \
+#    && cd Porechop \
+#    && /opt/venv/bin/python3 setup.py install \
+#    && ln -s Porechop/porechop-runner.py /usr/local/bin/porechop
 
 # Set up environment variables for the virtual environment
 ENV PATH="/opt/venv/bin:/usr/local/bin:$PATH"
