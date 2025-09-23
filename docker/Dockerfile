@@ -70,12 +70,12 @@ RUN python3 -m venv /opt/venv \
     && ln -s /opt/venv/bin/NanoFilt /usr/local/bin/ \
 
 # Install FastQC
-RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
-    unzip fastqc_v0.12.1.zip && \
-    mv FastQC /opt/ && \
-    chmod +x /opt/FastQC/fastqc && \
-    ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc && \
-    rm fastqc_v0.12.1.zip
+#RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
+#    unzip fastqc_v0.12.1.zip && \
+#    mv FastQC /opt/ && \
+#    chmod +x /opt/FastQC/fastqc && \
+#    ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc && \
+#    rm fastqc_v0.12.1.zip
 
 # Install fastp  (1.0.1)
 RUN wget http://opengene.org/fastp/fastp && \
