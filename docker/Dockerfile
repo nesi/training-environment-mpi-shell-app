@@ -78,7 +78,7 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.
     unzip fastqc_v0.12.1.zip && \
     mv FastQC /opt/ && \
     chmod +x /opt/FastQC/fastqc && \
-    ln -s /opt/FastQC/fastqc /usr/local/bin/ && \
+    ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc && \
     rm fastqc_v0.12.1.zip
 
 # Install fastp  (1.0.1)
@@ -90,7 +90,6 @@ RUN wget http://opengene.org/fastp/fastp && \
 # porechop
 RUN git clone https://github.com/rrwick/Porechop.git \
     && cd Porechop \
-#    && /opt/venv/bin/python3 setup.py install \
     && make \    
     && ln -s Porechop/porechop-runner.py /usr/local/bin/porechop
 
