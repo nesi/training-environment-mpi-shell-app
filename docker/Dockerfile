@@ -72,8 +72,8 @@ RUN python3 -m venv /opt/venv \
     && git clone https://github.com/rrwick/Porechop.git \
     && cd Porechop \
     && /opt/venv/bin/python3 setup.py install \
-    && chmod a+x porechop \
-    && ln -s porechop /usr/local/bin/
+    && chmod +x porechop \
+    && ln -s /opt/venv/bin/porechop /usr/local/bin/porechop
 
 # Install FastQC
 RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
@@ -85,7 +85,7 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.
 
 # Install fastp  (1.0.1)
 RUN wget http://opengene.org/fastp/fastp && \
-    chmod a+x fastp && \
+    chmod +x fastp && \
     mv fastp /opt/ && \
     ln -s /opt/fastp /usr/local/bin/fastp
 
