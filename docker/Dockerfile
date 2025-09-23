@@ -34,6 +34,10 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
 
 ENV LANG en_NZ.utf8
 
+# make a dummy module command to avoid warnings from ondemand job_script_content.sh
+RUN echo "#!/bin/bash" > /bin/module \
+    && chmod +x /bin/module
+
 # install kubectl, required for running on the k8s cluster
 ARG KUBECTL_VERSION=v1.28.5
 RUN curl -LO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl \
@@ -68,12 +72,6 @@ RUN python3 -m venv /opt/venv \
     # Create symlinks to the venv binaries
     && ln -s /opt/venv/bin/pycoQC /usr/local/bin/ \
     && ln -s /opt/venv/bin/NanoFilt /usr/local/bin/ \
-    # porechop
-    && git clone https://github.com/rrwick/Porechop.git \
-    && cd Porechop \
-    && /opt/venv/bin/python3 setup.py install \
-    && chmod +x porechop \
-    && ln -s /opt/venv/bin/porechop /usr/local/bin/porechop
 
 # Install FastQC
 RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
@@ -86,11 +84,23 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.
 # Install fastp  (1.0.1)
 RUN wget http://opengene.org/fastp/fastp && \
     chmod +x fastp && \
-    mv fastp /opt/ && \
-    ln -s /opt/fastp /usr/local/bin/fastp
+    mv fastp /usr/local/bin/ \
+
+# porechop
+RUN git clone https://github.com/rrwick/Porechop.git \
+    && cd Porechop \
+#    && /opt/venv/bin/python3 setup.py install \
+    && make \    
+    && ln -s Porechop/porechop-runner.py /usr/local/bin/porechop
 
 # Set up environment variables for the virtual environment
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:/usr/local/bin:$PATH"
+
+# dir setup
+RUN mkdir -p /var/lib/MPI \
+    && chown -R root:root /var/lib/MPI \
+    && chmod -R o+rX /var/lib/MPI \
+    && cd /var/lib/MPI \
 
 # copy data
 # COPY docker/MPI/ /var/lib/MPI/
