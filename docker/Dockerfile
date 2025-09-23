@@ -78,13 +78,14 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.
     unzip fastqc_v0.12.1.zip && \
     mv FastQC /opt/ && \
     chmod +x /opt/FastQC/fastqc && \
-    ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc && \
+    ln -s /opt/FastQC/fastqc /usr/local/bin/ && \
     rm fastqc_v0.12.1.zip
 
 # Install fastp  (1.0.1)
 RUN wget http://opengene.org/fastp/fastp && \
     chmod +x fastp && \
-    mv fastp /usr/local/bin/ \
+    mv fastp /opt/ && \
+    ln -s /opt/fastp /usr/local/bin/ \
 
 # porechop
 RUN git clone https://github.com/rrwick/Porechop.git \
