@@ -54,12 +54,12 @@ RUN git clone https://github.com/nesi/training-environment-k8s-utils.git /opt/oo
     && rm -rf /opt/ood-k8s-utils
 
 # download the required data into the container image and make sure permission are ok
-#RUN wget -nv https://github.com/GenomicsAotearoa/shell-for-bioinformatics/releases/download/v2.0/puzzles_da.tar.gz \
-#        -O /var/lib/puzzles_da.tar.gz \
-#    && tar -xzf /var/lib/puzzles_da.tar.gz -C /var/lib \
-#    && rm -f /var/lib/puzzles_da.tar.gz \
-#    && chown -R root:root /var/lib/puzzles_da \
-#    && chmod -R o+rX /var/lib/puzzles_da
+#RUN wget -nv https://github.com/nesi/training-environment-rstudio-rnaseq-app/releases/download/v0.1.2/level1.tar.gz \
+#        -O /var/lib/level1.tar.gz \
+#    && tar -xzf /var/lib/level1.tar.gz -C /var/lib \
+#    && rm -f /var/lib/level1.tar.gz \
+#    && chown -R root:root /var/lib/level1 \
+#    && chmod -R o+rwX /var/lib/level1
 
 # install jupyterlab
 RUN pip3 --no-cache-dir install jupyterlab
@@ -73,7 +73,6 @@ RUN python3 -m venv /opt/venv \
     && ln -s /opt/venv/bin/pycoQC /usr/local/bin/ \
     && ln -s /opt/venv/bin/NanoFilt /usr/local/bin/
 
-# Install FastQC
 # Install FastQC
 RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
     unzip fastqc_v0.12.1.zip && \
@@ -91,12 +90,19 @@ RUN wget http://opengene.org/fastp/fastp && \
 # porechop
 RUN git clone https://github.com/rrwick/Porechop.git \
     && cd Porechop \
-#    && /opt/venv/bin/python3 setup.py install \
     && make \    
     && ln -s /Porechop/porechop-runner.py /usr/local/bin/porechop
+
+# SeqKit
+RUN wget https://github.com/shenwei356/seqkit/releases/download/v2.10.1/seqkit_linux_amd64.tar.gz && \
+    tar -xvzf seqkit_linux_amd64.tar.gz && \
+    chmod +x seqkit && \
+    mv seqkit /opt/ && \
+    ln -s /opt/seqkit /usr/local/bin/seqkit
+    rm seqkit_linux_amd64.tar.gz
 
 # Set up environment variables for the virtual environment
 ENV PATH="/opt/venv/bin:/usr/local/bin:$PATH"
 
 # copy data
-# COPY docker/MPI/ /var/lib/MPI/
+# COPY docker/data/ /var/lib/data/
