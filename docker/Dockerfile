@@ -98,7 +98,7 @@ RUN wget https://github.com/shenwei356/seqkit/releases/download/v2.10.1/seqkit_l
     tar -xvzf seqkit_linux_amd64.tar.gz && \
     chmod +x seqkit && \
     mv seqkit /opt/ && \
-    ln -s /opt/seqkit /usr/local/bin/seqkit
+    ln -s /opt/seqkit /usr/local/bin/seqkit && \
     rm seqkit_linux_amd64.tar.gz
 
 # Set up environment variables for the virtual environment
