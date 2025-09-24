@@ -86,14 +86,14 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.
 RUN wget http://opengene.org/fastp/fastp && \
     chmod +x fastp && \
     mv fastp /opt/ && \
-    ln -s /opt/fastp /usr/local/bin/
+    ln -s /opt/fastp /usr/local/bin/fastp
 
 # porechop
 RUN git clone https://github.com/rrwick/Porechop.git \
     && cd Porechop \
 #    && /opt/venv/bin/python3 setup.py install \
     && make \    
-    && ln -s Porechop/porechop-runner.py /usr/local/bin/porechop
+    && ln -s /opt/porechop/porechop-runner.py /usr/local/bin/porechop
 
 # Set up environment variables for the virtual environment
 ENV PATH="/opt/venv/bin:/usr/local/bin:$PATH"
