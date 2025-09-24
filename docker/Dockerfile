@@ -93,7 +93,7 @@ RUN git clone https://github.com/rrwick/Porechop.git \
     && cd Porechop \
 #    && /opt/venv/bin/python3 setup.py install \
     && make \    
-    && ln -s /opt/porechop/porechop-runner.py /usr/local/bin/porechop
+    && ln -s /Porechop/porechop-runner.py /usr/local/bin/porechop
 
 # Set up environment variables for the virtual environment
 ENV PATH="/opt/venv/bin:/usr/local/bin:$PATH"
