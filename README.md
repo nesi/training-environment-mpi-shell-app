@@ -27,7 +27,12 @@ do
     chmod -R go+rw /home/shared/training$i/level1
 done
 ```
+Permissions for `trainer` accounts don;t allow the copying, so all trainer account must upload and then run the following.
 
+``` bash
+tar -xzf /home/shared/trainer1/level1.tar.gz -C /home/shared/trainer1
+rm /home/shared/trainer1/level1.tar.gz
+```
 
 
 
