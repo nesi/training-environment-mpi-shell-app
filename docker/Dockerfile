@@ -98,11 +98,5 @@ RUN git clone https://github.com/rrwick/Porechop.git \
 # Set up environment variables for the virtual environment
 ENV PATH="/opt/venv/bin:/usr/local/bin:$PATH"
 
-# dir setup
-RUN mkdir -p /var/lib/MPI \
-    && chown -R root:root /var/lib/MPI \
-    && chmod -R o+rX /var/lib/MPI \
-    && cd /var/lib/MPI
-
 # copy data
 # COPY docker/MPI/ /var/lib/MPI/
