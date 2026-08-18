@@ -1,0 +1,22 @@
+# Assembly, mapping, polishing and annotation tools.
+# SPAdes lives in its own environment (see spades.yml).
+# Versions match the NeSI (mahuika) modules used in the workshop:
+#   Flye/2.9.1-gimkl-2022a-Python-3.10.5
+#   QUAST/5.2.0-gimkl-2022a            minimap2/2.24-GCC-11.3.0
+#   Racon/1.5.0-GCC-11.3.0             Bowtie2/2.4.5-GCC-11.3.0
+#   SAMtools/1.16.1-GCC-11.3.0         prodigal/2.6.3-GCCcore-7.4.0
+#   BLAST/2.13.0-GCC-11.3.0            Kraken2/2.1.3-GCC-11.3.0
+name: assembly
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - flye=2.9.1
+  - quast=5.2.0
+  - minimap2=2.24
+  - racon=1.5.0
+  - bowtie2=2.4.5
+  - samtools=1.16.1
+  - prodigal=2.6.3
+  - blast=2.13.0
+  - kraken2=2.1.3

@@ -1,0 +1,12 @@
+# Read QC and trimming tools carried over from the previous image.
+name: qc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fastqc=0.12.1
+  - fastp=1.0.1
+  - seqkit=2.10.1
+  - porechop=0.2.4
+  - nanofilt=2.8.0
+  - pycoqc=2.5.2

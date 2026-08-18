@@ -1,21 +1,105 @@
 # REANNZ training environment for MPI Bioinformatics app
 
-JupyterLab app for running MPI Shell for Bioinformatics on the NeSI training environment.
+JupyterLab app for running the MPI Shell for Bioinformatics workshop on the NeSI training environment.
 
 ### Workshop Material
 https://genomicsaotearoa.github.io/hts_workshop_mpi/
 
-### Tools List
-* fastqc
-* fastp
-* pycoQC
-* NanoFlit
-* porechop
-* seqkit
+## Tools
 
-###  Manual Changes after deployment
-dataset is large ~2Gb and does not store on git or containerised and requires manual upload.
-login in as `trainer1` and upload a tar.gz file of the workshop material followed by a loop to copy all data to training accounts and then also for the trainer accounts, modify as required.
+Every tool is installed at the same version as the corresponding NeSI (mahuika) module,
+is on `PATH` in every shell and notebook terminal, and is started by typing its name.
+No `module load`, no `conda activate`, no `source` of an environment.
+
+Run `mpi-tools` inside the app to print this table with descriptions.
+
+| Command | Version | NeSI module |
+|---|---|---|
+| `spades.py`, `metaspades.py`, `rnaspades.py`, `plasmidspades.py` | 3.15.2 | SPAdes/3.15.2-gimkl-2020a |
+| `flye` | 2.9.1 | Flye/2.9.1-gimkl-2022a-Python-3.10.5 |
+| `quast.py`, `metaquast.py` | 5.2.0 | QUAST/5.2.0-gimkl-2022a |
+| `minimap2` | 2.24 | minimap2/2.24-GCC-11.3.0 |
+| `racon` | 1.5.0 | Racon/1.5.0-GCC-11.3.0 |
+| `bowtie2`, `bowtie2-build`, `bowtie2-inspect` | 2.4.5 | Bowtie2/2.4.5-GCC-11.3.0 |
+| `samtools` | 1.16.1 | SAMtools/1.16.1-GCC-11.3.0 |
+| `prodigal` | 2.6.3 | prodigal/2.6.3-GCCcore-7.4.0 |
+| `blastn`, `blastp`, `blastx`, `tblastn`, `tblastx`, `makeblastdb`, `blastdbcmd` | 2.13.0 | BLAST/2.13.0-GCC-11.3.0 |
+| `diamond` | 2.2.1 | DIAMOND/2.2.1-GCC-15.2.0 |
+| `kraken2`, `kraken2-build`, `kraken2-inspect` | 2.1.3 | Kraken2/2.1.3-GCC-11.3.0 |
+| `fastqc` | 0.12.1 | - |
+| `fastp` | 1.0.1 | - |
+| `seqkit` | 2.10.1 | - |
+| `porechop` | 0.2.4 | - |
+| `NanoFilt` | 2.8.0 | - |
+| `pycoQC` | 2.5.2 | - |
+
+`bioawk`, `git`, `rsync`, `tree`, `vim`, `nano` and JupyterLab are also installed.
+
+`module` still exists as a no-op that exits 0, so workshop material copied from mahuika
+that still contains `module load` lines keeps running.
+
+## How the tools are installed
+
+The tools are installed with `micromamba` into four environments under `/opt/conda/envs`
+(`docker/envs/*.yml`). Environments are split only because the pinned versions cannot
+coexist in one solve:
+
+* `diamond` - DIAMOND 2.2.1 needs `zlib >= 1.3.2`, SAMtools 1.16.1 pins `zlib < 1.3`.
+* `spades` - SPAdes 3.15.2 ships a vendored `pyyaml` that calls `collections.Hashable`,
+  removed in Python 3.10, so it needs Python 3.9 while Flye 2.9.1 pulls in Python 3.10.
+* `assembly` - Flye, QUAST, minimap2, Racon, Bowtie2, SAMtools, prodigal, BLAST, Kraken2.
+* `qc` - FastQC, fastp, SeqKit, Porechop, NanoFilt, pycoQC.
+
+The split is invisible to users: `docker/make-wrappers.sh` reads `docker/tools.tsv` and
+writes one wrapper per command into `/usr/local/bin`. Each wrapper puts its own
+environment's `bin` first on `PATH` and then execs the tool, so every tool starts the
+same way and tools that call helper binaries (`spades-core`, `flye-modules`,
+`kraken2-classify`) still find them.
+
+### Adding or changing a tool
+
+1. Add or edit the pin in the relevant `docker/envs/*.yml`.
+2. Add the command, environment, version and description to `docker/tools.tsv`
+   (tab separated).
+3. Rebuild. The build fails if a command listed in `tools.tsv` is not installed.
+
+## Testing the image
+
+```bash
+docker build -t mpi-shell:test docker
+
+# runs during the build as well: starts every command in tools.tsv
+docker run --rm mpi-shell:test bash /opt/smoke-test.sh
+
+# end-to-end, ~3 min: builds a synthetic dataset and runs the whole pipeline
+docker run --rm mpi-shell:test bash /opt/functional-test.sh
+```
+
+The functional test covers assembly (SPAdes, Flye), QA (QUAST), mapping and polishing
+(minimap2, Racon, Bowtie2, SAMtools), gene prediction (prodigal), homology search
+(BLAST, DIAMOND), classification (Kraken2 with a custom database built during the test)
+and read QC (FastQC, fastp, SeqKit, Porechop, NanoFilt, pycoQC).
+
+## Kraken2 database
+
+No Kraken2 database is bundled - the standard databases are tens of GB. Either build a
+small custom one during the workshop:
+
+```bash
+kraken2-build --download-taxonomy --db mydb
+kraken2-build --add-to-library my_genomes.fa --db mydb
+kraken2-build --build --db mydb --threads 4
+kraken2 --db mydb reads.fq --report kraken.report
+```
+
+or upload a prebuilt database the same way as the workshop dataset (below) and point
+`--db` at it.
+
+## Manual changes after deployment
+
+The dataset is large (~2Gb), is not stored in git or in the container image, and requires
+manual upload. Log in as `trainer1`, upload a tar.gz of the workshop material, then copy
+it to the training accounts:
 
 ``` bash
 for i in $(seq 1 10)
@@ -27,12 +111,20 @@ do
     chmod -R go+rw /home/shared/training$i/level1
 done
 ```
-Permissions for `trainer` accounts don;t allow the copying, so all trainer account must upload and then run the following.
+
+Permissions for `trainer` accounts don't allow the copying, so every trainer account must
+upload and then run the following.
 
 ``` bash
 tar -xzf /home/shared/trainer1/level1.tar.gz -C /home/shared/trainer1
 rm /home/shared/trainer1/level1.tar.gz
 ```
 
+## Releasing
 
+Push to `main` builds and pushes the image to `ghcr.io/nesi/training-environment-mpi-shell-app`.
+Tag the release, then point `submit.yml.erb` at the new tag:
 
+``` bash
+git tag v0.3.0 && git push origin v0.3.0
+```

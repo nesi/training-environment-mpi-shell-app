@@ -1,11 +1,13 @@
 FROM ubuntu:22.04
 
-# run unminimise
+# run unminimise so man pages and the usual interactive tooling are present
 RUN yes | unminimize
 
 # install system dependencies
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         bioawk \
+        bzip2 \
+        ca-certificates \
         curl \
         dnsutils \
         git \
@@ -25,18 +27,25 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         python3-venv \
         python3-distutils \
         rsync \
+        tree \
         unzip \
         vim \
         wget \
         zip \
-        default-jre \
     && rm -rf /var/lib/apt/lists/* \
     && localedef -i en_NZ -c -f UTF-8 -A /usr/share/locale/locale.alias en_NZ.UTF-8
 
-ENV LANG en_NZ.utf8
+ENV LANG=en_NZ.utf8
 
-# make a dummy module command to avoid warnings from ondemand job_script_content.sh
-RUN echo "#!/bin/bash" > /bin/module \
+# make a dummy module command: the OnDemand job_script_content.sh calls it, and
+# workshop material copied from mahuika may still contain "module load" lines.
+# Every tool in this image is already on PATH, so this is a no-op.
+RUN printf '%s\n' \
+        '#!/bin/bash' \
+        '# No modules in this container - every tool is already on PATH.' \
+        '# Run "mpi-tools" to list what is installed.' \
+        'exit 0' \
+        > /bin/module \
     && chmod +x /bin/module
 
 # install kubectl, required for running on the k8s cluster
@@ -54,56 +63,45 @@ RUN git clone https://github.com/nesi/training-environment-k8s-utils.git /opt/oo
     && mv /opt/ood-k8s-utils/files/* /bin/ \
     && rm -rf /opt/ood-k8s-utils
 
-# download the required data into the container image and make sure permission are ok
-#RUN wget -nv https://github.com/nesi/training-environment-rstudio-rnaseq-app/releases/download/v0.1.2/level1.tar.gz \
-#        -O /var/lib/level1.tar.gz \
-#    && tar -xzf /var/lib/level1.tar.gz -C /var/lib \
-#    && rm -f /var/lib/level1.tar.gz \
-#    && chown -R root:root /var/lib/level1 \
-#    && chmod -R o+rwX /var/lib/level1
-
 # install jupyterlab
 RUN pip3 --no-cache-dir install jupyterlab
 
-# Install Python-based tools in a virtual environment
-RUN python3 -m venv /opt/venv \
-    && /opt/venv/bin/pip install --upgrade pip \
-    && /opt/venv/bin/pip install pycoQC \
-    && /opt/venv/bin/pip install nanofilt \
-    # Create symlinks to the venv binaries
-    && ln -s /opt/venv/bin/pycoQC /usr/local/bin/ \
-    && ln -s /opt/venv/bin/NanoFilt /usr/local/bin/
+# install micromamba, used to install every bioinformatics tool at a pinned version
+ARG MICROMAMBA_VERSION=1.5.8
+ENV MAMBA_ROOT_PREFIX=/opt/conda
+RUN curl -Ls "https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSION}" \
+        | tar -xj -C /usr/local bin/micromamba \
+    && chmod +x /usr/local/bin/micromamba
 
-# Install FastQC
-RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
-    unzip fastqc_v0.12.1.zip && \
-    mv FastQC /opt/ && \
-    chmod +x /opt/FastQC/fastqc && \
-    ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc && \
-    rm fastqc_v0.12.1.zip
+# bioinformatics tools, one environment per set of mutually compatible pins.
+# They are split because the pinned versions cannot coexist: DIAMOND 2.2.1 needs
+# zlib >= 1.3.2 while SAMtools 1.16.1 pins zlib < 1.3, and SPAdes 3.15.2 needs
+# Python < 3.10 while Flye 2.9.1 pulls in 3.10.
+COPY envs/ /opt/envs/
+RUN micromamba create -y -f /opt/envs/assembly.yml \
+    && micromamba create -y -f /opt/envs/spades.yml \
+    && micromamba create -y -f /opt/envs/diamond.yml \
+    && micromamba create -y -f /opt/envs/qc.yml \
+    && micromamba clean --all --yes \
+    && rm -rf /opt/conda/pkgs
 
-# Install fastp  (1.0.1)
-RUN wget http://opengene.org/fastp/fastp && \
-    chmod +x fastp && \
-    mv fastp /opt/ && \
-    ln -s /opt/fastp /usr/local/bin/fastp
+# expose every tool on PATH through a wrapper, so all tools start the same way
+COPY tools.tsv /opt/tools.tsv
+COPY make-wrappers.sh /opt/make-wrappers.sh
+COPY mpi-tools /usr/local/bin/mpi-tools
+RUN chmod +x /opt/make-wrappers.sh /usr/local/bin/mpi-tools \
+    && /opt/make-wrappers.sh /opt/tools.tsv
 
-# porechop
-RUN git clone https://github.com/rrwick/Porechop.git \
-    && cd Porechop \
-    && make \    
-    && ln -s /Porechop/porechop-runner.py /usr/local/bin/porechop
+ENV PATH="/usr/local/bin:${PATH}"
 
-# SeqKit
-RUN wget https://github.com/shenwei356/seqkit/releases/download/v2.10.1/seqkit_linux_amd64.tar.gz && \
-    tar -xvzf seqkit_linux_amd64.tar.gz && \
-    chmod +x seqkit && \
-    mv seqkit /opt/ && \
-    ln -s /opt/seqkit /usr/local/bin/seqkit && \
-    rm seqkit_linux_amd64.tar.gz
+# smoke test: fail the build if any declared tool cannot start
+COPY smoke-test.sh /opt/smoke-test.sh
+RUN chmod +x /opt/smoke-test.sh && /opt/smoke-test.sh
 
-# Set up environment variables for the virtual environment
-ENV PATH="/opt/venv/bin:/usr/local/bin:$PATH"
+# end-to-end test, run by hand (too slow for the build):
+#   docker run --rm <image> bash /opt/functional-test.sh
+COPY functional-test.sh /opt/functional-test.sh
+RUN chmod +x /opt/functional-test.sh
 
 # copy data
 # COPY docker/data/ /var/lib/data/
