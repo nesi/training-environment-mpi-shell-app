@@ -1,5 +1,7 @@
 # REANNZ training environment for MPI Bioinformatics app
 
+can jen edit?
+
 JupyterLab app for running the MPI Shell for Bioinformatics workshop on the NeSI training environment.
 
 ### Workshop Material
