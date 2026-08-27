@@ -7,78 +7,96 @@ https://genomicsaotearoa.github.io/hts_workshop_mpi/
 
 ## Tools
 
-Where the workshop uses a NeSI (mahuika) module, the tool is installed at that same
-version. Every tool is on `PATH` in every shell and notebook terminal and is started by
-typing its name. No `module load`, no `conda activate`, no `source` of an environment.
+Nothing in this image is pinned. Versions are whatever conda resolved when the image
+was built, and they are recorded in the image itself - run `mpi-tools` inside the app to
+print the full table with the versions that image actually contains.
 
-Run `mpi-tools` inside the app to print this table with descriptions.
+Every tool is on `PATH` in every shell and notebook terminal and is started by typing its
+name. No `module load`, no `conda activate`, no `source` of an environment.
 
-Flye was removed in v0.4.0: it crashed on the workshop dataset both in this environment
-and on NeSI. `raven` is the long read assembler used in its place, with `canu` available
-as a more configurable alternative.
-
-| Command | Version | NeSI module |
-|---|---|---|
-| `spades.py`, `metaspades.py`, `rnaspades.py`, `plasmidspades.py` | 3.15.2 | SPAdes/3.15.2-gimkl-2020a |
-| `raven` | 1.8.3 | - |
-| `canu` | 2.3 | - |
-| `Bandage` | 0.9.0 | - |
-| `quast.py`, `metaquast.py` | 5.2.0 | QUAST/5.2.0-gimkl-2022a |
-| `minimap2` | 2.24 | minimap2/2.24-GCC-11.3.0 |
-| `racon` | 1.5.0 | Racon/1.5.0-GCC-11.3.0 |
-| `bowtie2`, `bowtie2-build`, `bowtie2-inspect` | 2.4.5 | Bowtie2/2.4.5-GCC-11.3.0 |
-| `samtools` | 1.16.1 | SAMtools/1.16.1-GCC-11.3.0 |
-| `prodigal` | 2.6.3 | prodigal/2.6.3-GCCcore-7.4.0 |
-| `augustus`, `etraining`, `new_species.pl`, `gff2gbSmallDNA.pl`, `optimize_augustus.pl` | 3.5.0 | - |
-| `blastn`, `blastp`, `blastx`, `tblastn`, `tblastx`, `makeblastdb`, `blastdbcmd` | 2.13.0 | BLAST/2.13.0-GCC-11.3.0 |
-| `diamond` | 2.2.1 | DIAMOND/2.2.1-GCC-15.2.0 |
-| `kraken2`, `kraken2-build`, `kraken2-inspect` | 2.1.3 | Kraken2/2.1.3-GCC-11.3.0 |
-| `fastqc` | 0.12.1 | - |
-| `fastp` | 1.0.1 | - |
-| `seqkit` | 2.10.1 | - |
-| `seqtk` | 1.4 | - |
-| `porechop` | 0.2.4 | - |
-| `NanoFilt` | 2.8.0 | - |
-| `pycoQC` | 2.5.2 | - |
+| Command | Purpose |
+|---|---|
+| `spades.py`, `metaspades.py`, `rnaspades.py`, `plasmidspades.py` | Short read assembly |
+| `raven` | Long read assembly |
+| `canu` | Long read assembly, more configurable |
+| `Bandage` | Assembly graph inspection and rendering |
+| `quast.py`, `metaquast.py` | Assembly quality assessment |
+| `minimap2` | Long read alignment |
+| `racon` | Consensus polishing |
+| `bowtie2`, `bowtie2-build`, `bowtie2-inspect` | Short read alignment |
+| `samtools` | SAM/BAM/CRAM manipulation |
+| `prodigal` | Prokaryote gene prediction |
+| `augustus`, `etraining`, `new_species.pl`, `gff2gbSmallDNA.pl`, `optimize_augustus.pl` | Eukaryote gene prediction |
+| `blastn`, `blastp`, `blastx`, `tblastn`, `tblastx`, `makeblastdb`, `blastdbcmd` | Homology search |
+| `diamond` | Fast protein alignment |
+| `kraken2`, `kraken2-build`, `kraken2-inspect` | Taxonomic classification |
+| `fastqc`, `fastp` | Read quality control and trimming |
+| `seqkit`, `seqtk` | FASTA/FASTQ manipulation |
+| `porechop`, `NanoFilt`, `pycoQC` | Nanopore read QC |
 
 `bioawk`, `git`, `rsync`, `tree`, `vim`, `nano` and JupyterLab are also installed.
 
 `module` still exists as a no-op that exits 0, so workshop material copied from mahuika
 that still contains `module load` lines keeps running.
 
+### Versions are no longer matched to mahuika
+
+Earlier images pinned every tool to the version of the matching NeSI (mahuika) module.
+Those pins could not co-exist in a single conda solve, so the tools were split across
+five environments, and the dependencies each one duplicated cost roughly a gigabyte.
+
+Dropping the pins collapsed that to one environment and, together with the build cleanup
+below, took the image from 6.13 GB to 4.50 GB. The trade is that versions drift:
+rebuilding six months from now may not produce the same versions as today. Because the
+workshop app is pinned to a tagged image, a given tag stays fixed once built - the drift
+only appears when a new image is built.
+
+If a workshop exercise genuinely depends on a specific version, pin that one tool in
+`docker/envs/bio.yml` and rebuild. Expect a single pin to be enough to force the
+environment apart again, so pin only what is actually needed.
+
 ## How the tools are installed
 
-The tools are installed with `micromamba` into five environments under `/opt/conda/envs`
-(`docker/envs/*.yml`). Environments are split only because the pinned versions cannot
-coexist in one solve:
+Every tool is installed with `micromamba` into a single environment,
+`/opt/conda/envs/bio`, from `docker/envs/bio.yml`.
 
-* `assembly` - Raven, QUAST, minimap2, Racon, Bowtie2, SAMtools, prodigal, BLAST, Kraken2.
-* `spades` - SPAdes 3.15.2 ships a vendored `pyyaml` that calls `collections.Hashable`,
-  removed in Python 3.10, so it needs Python 3.9 while `assembly` solves to Python 3.10.
-* `diamond` - DIAMOND 2.2.1 needs `zlib >= 1.3.2`, SAMtools 1.16.1 pins `zlib < 1.3`.
-* `extras` - Canu, Bandage and Augustus, which need the same newer `zlib` as DIAMOND.
-* `qc` - FastQC, fastp, SeqKit, seqtk, Porechop, NanoFilt, pycoQC.
+`docker/make-wrappers.sh` reads `docker/tools.tsv` and writes one wrapper per command
+into `/usr/local/bin`. Each wrapper puts the environment's `bin` first on `PATH` and then
+execs the tool, so every tool starts the same way and tools that call helper binaries
+(`spades-core`, `kraken2-classify`) still find them.
 
-The split is invisible to users: `docker/make-wrappers.sh` reads `docker/tools.tsv` and
-writes one wrapper per command into `/usr/local/bin`. Each wrapper puts its own
-environment's `bin` first on `PATH` and then execs the tool, so every tool starts the
-same way and tools that call helper binaries (`spades-core`, `raven`, `kraken2-classify`)
-still find them.
+The same script records the version each conda package actually resolved to in
+`/opt/tool-versions.tsv`. That file is what `mpi-tools` prints and what `smoke-test.sh`
+checks against, so neither can report a version the image does not contain.
 
 The wrappers do not run conda's activation scripts, so a tool that needs an environment
 variable declares it in the fifth column of `docker/tools.tsv` as `KEY=VALUE` pairs
 separated by semicolons (`-` when it needs none). Three tools use this:
 
 * `Bandage` - `QT_QPA_PLATFORM=offscreen`, so it runs headless with no X server.
-* `canu` - `JAVA_HOME`, pointing at the JDK inside the `extras` environment.
+* `canu` - `JAVA_HOME`, pointing at the JDK inside the environment.
 * `augustus` and its helper scripts - `AUGUSTUS_CONFIG_PATH`.
+
+### Image size
+
+The build deletes what only a compiler needs: C/C++ headers, static archives (`*.a`),
+man pages and `share/doc`. Augustus depends on `libboost-devel`, which otherwise drags a
+full sysroot and header tree into an image that never compiles anything.
+
+Shared libraries are deliberately left alone. The conda toolchain directory holds the
+boost `.so` files Augustus links against at run time, so deleting that directory
+wholesale leaves `augustus` on `PATH` but unable to start. `smoke-test.sh` runs straight
+after the cleanup and fails the build if any tool cannot start, which is what catches
+this class of mistake.
 
 ### Adding or changing a tool
 
-1. Add or edit the pin in the relevant `docker/envs/*.yml`.
-2. Add the command, environment, version, description and any extra environment
-   variables to `docker/tools.tsv` (tab separated, five columns).
-3. Rebuild. The build fails if a command listed in `tools.tsv` is not installed.
+1. Add the package to `docker/envs/bio.yml`. Leave it unpinned unless a workshop exercise
+   depends on a specific version.
+2. Add the command, environment, conda package name, description and any extra
+   environment variables to `docker/tools.tsv` (tab separated, five columns).
+3. Rebuild. The build fails if a command listed in `tools.tsv` is not installed, if its
+   conda package is not installed, or if any tool cannot start.
 
 ## Testing the image
 
@@ -97,6 +115,9 @@ The functional test covers assembly (SPAdes, Raven, Canu), assembly graph render
 prediction (prodigal, Augustus), homology search (BLAST, DIAMOND), classification
 (Kraken2 with a custom database built during the test) and read QC (FastQC, fastp,
 SeqKit, seqtk, Porechop, NanoFilt, pycoQC).
+
+Run it after any change to the tool set or to the image cleanup. The build-time smoke
+test proves each tool starts; only the functional test proves they still do real work.
 
 ## Kraken2 database
 
@@ -162,7 +183,7 @@ rm /home/shared/trainer1/level1.tar.gz
 
 ## Releasing
 
-Current release: **v0.4.0** (Raven replaces Flye; Canu, Bandage, Augustus and seqtk added).
+Current release: **v0.5.0** (single conda environment, no version pins; image reduced from 6.13 GB to 4.50 GB).
 
 Any push to `main` builds the image and pushes it to
 `ghcr.io/nesi/training-environment-mpi-shell-app`. A tag push builds and publishes that
@@ -179,13 +200,13 @@ To cut a release:
 
    ``` bash
    git checkout main && git pull --ff-only
-   git tag -a v0.4.0 -m "v0.4.0: summary of the change" && git push origin v0.4.0
+   git tag -a v0.5.0 -m "v0.5.0: summary of the change" && git push origin v0.5.0
    ```
 
 5. Wait for the tag's build to finish, then confirm the image is pullable:
 
    ``` bash
-   docker pull ghcr.io/nesi/training-environment-mpi-shell-app:v0.4.0
+   docker pull ghcr.io/nesi/training-environment-mpi-shell-app:v0.5.0
    ```
 
 6. Bump this app's version in the `training-environment` vars repo to deploy it.
