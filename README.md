@@ -162,9 +162,33 @@ rm /home/shared/trainer1/level1.tar.gz
 
 ## Releasing
 
-Push to `main` builds and pushes the image to `ghcr.io/nesi/training-environment-mpi-shell-app`.
-Tag the release, then point `submit.yml.erb` at the new tag:
+Current release: **v0.4.0** (Raven replaces Flye; Canu, Bandage, Augustus and seqtk added).
 
-``` bash
-git tag v0.4.0 && git push origin v0.4.0
-```
+Any push to `main` builds the image and pushes it to
+`ghcr.io/nesi/training-environment-mpi-shell-app`. A tag push builds and publishes that
+tag as well, which is what the app is pinned to.
+
+To cut a release:
+
+1. Open a pull request; the branch build must pass before merging.
+2. Bump the image tag in `submit.yml.erb` and the version named in this section to the
+   version you are about to release. Do this **in the pull request**, so that the tag you
+   create points at a commit that already carries the right version.
+3. Merge to `main`.
+4. Tag `main` and push the tag:
+
+   ``` bash
+   git checkout main && git pull --ff-only
+   git tag -a v0.4.0 -m "v0.4.0: summary of the change" && git push origin v0.4.0
+   ```
+
+5. Wait for the tag's build to finish, then confirm the image is pullable:
+
+   ``` bash
+   docker pull ghcr.io/nesi/training-environment-mpi-shell-app:v0.4.0
+   ```
+
+6. Bump this app's version in the `training-environment` vars repo to deploy it.
+
+Before tagging, check the version appears consistently in `submit.yml.erb`, this section
+and — where the tool list changed — `manifest.yml`.
