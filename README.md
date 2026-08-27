@@ -7,32 +7,40 @@ https://genomicsaotearoa.github.io/hts_workshop_mpi/
 
 ## Tools
 
-Nothing in this image is pinned. Versions are whatever conda resolved when the image
-was built, and they are recorded in the image itself - run `mpi-tools` inside the app to
-print the full table with the versions that image actually contains.
+No tool is pinned to a version. Versions are whatever conda resolved when the image was
+built, and each image records its own - run `mpi-tools` inside the app to print the table
+with the versions that image actually contains.
 
 Every tool is on `PATH` in every shell and notebook terminal and is started by typing its
 name. No `module load`, no `conda activate`, no `source` of an environment.
 
-| Command | Purpose |
-|---|---|
-| `spades.py`, `metaspades.py`, `rnaspades.py`, `plasmidspades.py` | Short read assembly |
-| `raven` | Long read assembly |
-| `canu` | Long read assembly, more configurable |
-| `Bandage` | Assembly graph inspection and rendering |
-| `quast.py`, `metaquast.py` | Assembly quality assessment |
-| `minimap2` | Long read alignment |
-| `racon` | Consensus polishing |
-| `bowtie2`, `bowtie2-build`, `bowtie2-inspect` | Short read alignment |
-| `samtools` | SAM/BAM/CRAM manipulation |
-| `prodigal` | Prokaryote gene prediction |
-| `augustus`, `etraining`, `new_species.pl`, `gff2gbSmallDNA.pl`, `optimize_augustus.pl` | Eukaryote gene prediction |
-| `blastn`, `blastp`, `blastx`, `tblastn`, `tblastx`, `makeblastdb`, `blastdbcmd` | Homology search |
-| `diamond` | Fast protein alignment |
-| `kraken2`, `kraken2-build`, `kraken2-inspect` | Taxonomic classification |
-| `fastqc`, `fastp` | Read quality control and trimming |
-| `seqkit`, `seqtk` | FASTA/FASTQ manipulation |
-| `porechop`, `NanoFilt`, `pycoQC` | Nanopore read QC |
+| Command | Version in v0.5.0 | Purpose |
+|---|---|---|
+| `spades.py`, `metaspades.py`, `rnaspades.py`, `plasmidspades.py` | 4.3.0 | Short read assembly |
+| `raven` | 1.8.3 | Long read assembly |
+| `canu` | 2.3 | Long read assembly, more configurable |
+| `Bandage` | 0.9.0 | Assembly graph inspection and rendering |
+| `quast.py`, `metaquast.py` | 5.3.0 | Assembly quality assessment |
+| `minimap2` | 2.31 | Long read alignment |
+| `racon` | 1.5.0 | Consensus polishing |
+| `bowtie2`, `bowtie2-build`, `bowtie2-inspect` | 2.5.5 | Short read alignment |
+| `samtools` | 1.23 | SAM/BAM/CRAM manipulation |
+| `prodigal` | 2.6.3 | Prokaryote gene prediction |
+| `augustus`, `etraining`, `new_species.pl`, `gff2gbSmallDNA.pl`, `optimize_augustus.pl` | 3.5.0 | Eukaryote gene prediction |
+| `blastn`, `blastp`, `blastx`, `tblastn`, `tblastx`, `makeblastdb`, `blastdbcmd` | 2.16.0 | Homology search |
+| `diamond` | 2.2.5 | Fast protein alignment |
+| `kraken2`, `kraken2-build`, `kraken2-inspect` | 2.17.1 | Taxonomic classification |
+| `fastqc` | 0.12.1 | Read quality control |
+| `fastp` | 1.3.6 | Read trimming and filtering |
+| `seqkit` | 2.13.0 | FASTA/FASTQ manipulation |
+| `seqtk` | 1.5 | FASTA/FASTQ manipulation |
+| `porechop` | 0.2.4 | Nanopore adapter trimming |
+| `NanoFilt` | 2.8.0 | Nanopore read filtering |
+| `pycoQC` | 2.5.0.3 | Nanopore run QC report |
+
+The versions above are the ones the v0.5.0 image resolved to. Nothing is pinned, so a
+later image may differ - `mpi-tools` inside the app always prints what that image really
+contains, and is the version of record.
 
 `bioawk`, `git`, `rsync`, `tree`, `vim`, `nano` and JupyterLab are also installed.
 
