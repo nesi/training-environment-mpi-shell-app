@@ -1,7 +1,7 @@
 # SPAdes/3.15.2-gimkl-2020a
 # Kept in its own environment with Python pinned to 3.9: SPAdes 3.15.2 ships a
 # vendored pyyaml that calls collections.Hashable, which was removed in Python
-# 3.10, so it crashes on start-up in an environment built around a newer Python.
+# 3.10, and the `assembly` environment solves to Python 3.10.
 name: spades
 channels:
   - conda-forge

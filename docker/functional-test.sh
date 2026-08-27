@@ -56,6 +56,8 @@ PY
 check $? "generate test data"
 
 seqkit stats ref.fa r1.fq long.fq > seqkit.txt 2>&1;            check $? "seqkit stats"
+seqtk seq -A long.fq > long.fa 2>seqtk.log;                      check $? "seqtk fastq to fasta"
+test -s long.fa;                                                 check $? "seqtk fasta produced"
 fastp -i r1.fq -I r2.fq -o t1.fq -O t2.fq -j fastp.json -h fastp.html > fastp.log 2>&1; check $? "fastp paired trim"
 fastqc -q -o . r1.fq > fastqc.log 2>&1;                          check $? "fastqc"
 NanoFilt -q 5 -l 500 < long.fq > long.filt.fq 2>nanofilt.log;    check $? "NanoFilt"
@@ -63,8 +65,21 @@ porechop -i long.fq -o long.chop.fq --threads 4 > porechop.log 2>&1; check $? "p
 
 spades.py -1 r1.fq -2 r2.fq -o spades_out -t 8 -m 8 > spades.log 2>&1; check $? "spades.py assembly"
 test -s spades_out/contigs.fasta;                                check $? "spades contigs produced"
-flye --nano-raw long.fq --out-dir flye_out --threads 8 -g 30k > flye.log 2>&1; check $? "flye assembly"
-test -s flye_out/assembly.fasta;                                 check $? "flye assembly produced"
+
+raven --threads 4 --graphical-fragment-assembly raven.gfa long.fq > raven.fa 2>raven.log; check $? "raven assembly"
+test -s raven.fa;                                                check $? "raven contigs produced"
+test -s raven.gfa;                                               check $? "raven assembly graph produced"
+
+Bandage info raven.gfa > bandage.info 2>bandage.log;             check $? "Bandage info"
+Bandage image raven.gfa raven.png >> bandage.log 2>&1;           check $? "Bandage image"
+test -s raven.png;                                               check $? "Bandage png produced"
+
+# canu is the configurable alternative to raven; -fast and the low coverage
+# thresholds keep it inside a couple of minutes on this toy dataset
+canu -p canu -d canu_out genomeSize=30k -fast useGrid=false \
+     maxThreads=4 maxMemory=8g minInputCoverage=1 stopOnLowCoverage=1 \
+     -nanopore long.fq > canu.log 2>&1;                          check $? "canu assembly"
+test -s canu_out/canu.contigs.fasta;                             check $? "canu contigs produced"
 
 quast.py -o quast_out -r ref.fa spades_out/contigs.fasta > quast.log 2>&1; check $? "quast.py"
 test -s quast_out/report.txt;                                    check $? "quast report produced"
@@ -82,6 +97,9 @@ samtools flagstat bt2.bam > flagstat.txt 2>>st.log;              check $? "samto
 
 prodigal -i ref.fa -a genes.faa -d genes.fna -o genes.gbk > prodigal.log 2>&1; check $? "prodigal genes"
 test -s genes.faa;                                               check $? "prodigal proteins produced"
+
+augustus --species=human ref.fa > augustus.gff 2>augustus.log;   check $? "augustus gene prediction"
+test -s augustus.gff;                                            check $? "augustus gff produced"
 
 makeblastdb -in ref.fa -dbtype nucl -out refdb > blast.log 2>&1; check $? "makeblastdb"
 blastn -query ref.fa -db refdb -outfmt 6 -out blastn.tsv >> blast.log 2>&1; check $? "blastn"
