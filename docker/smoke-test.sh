@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 # Start every tool listed in tools.tsv to prove it is installed, on PATH and
 # able to load its libraries. Run at build time; also useful interactively.
+#
+# This is the check that catches an over-aggressive image cleanup: a tool whose
+# shared libraries have been deleted still exists on PATH but dies on start.
 set -uo pipefail
 
 TSV="${1:-/opt/tools.tsv}"
+VERSIONS="${2:-/opt/tool-versions.tsv}"
 fail=0
+
+declare -A VERSION=()
+if [ -r "$VERSIONS" ]; then
+    while IFS=$'\t' read -r cmd version; do
+        [ -n "${cmd:-}" ] && VERSION["$cmd"]="$version"
+    done < "$VERSIONS"
+fi
 
 # how to make each tool print something and exit; default is --version
 declare -A PROBE=(
@@ -51,7 +62,7 @@ declare -A NO_VERSION_STRING=(
     [optimize_augustus.pl]=1
 )
 
-while IFS=$'\t' read -r cmd env version description extra_env; do
+while IFS=$'\t' read -r cmd env package description extra_env; do
     [ -z "${cmd:-}" ] && continue
     case "$cmd" in \#*) continue ;; esac
 
@@ -65,14 +76,33 @@ while IFS=$'\t' read -r cmd env version description extra_env; do
     out=$("$cmd" $probe 2>&1)
     rc=$?
     out=$(printf '%s' "$out" | tr -d '\000')
+
+    # A tool that cannot start is a failure however it exits, and several exit 0
+    # while printing the error. Two ways this has actually happened here:
+    #   - deleting a shared library during the image cleanup (missing .so)
+    #   - a Python tool importing pkg_resources, which left the stdlib in 3.13
+    if grep -qiE "error while loading shared libraries|cannot open shared object|symbol lookup error" <<< "$out"; then
+        echo "FAIL ${cmd}: $(head -n 1 <<< "$out")"
+        fail=1
+        continue
+    fi
+    if grep -qE "^Traceback \(most recent call last\)" <<< "$out"; then
+        reason=$(grep -E '^[A-Za-z_.]*(Error|Exception):' <<< "$out" | head -n 1)
+        echo "FAIL ${cmd}: ${reason:-python traceback on start}"
+        fail=1
+        continue
+    fi
     # some tools exit non-zero after printing usage; treat empty output as the failure
     if [ -z "$out" ] && [ "$rc" -ne 0 ]; then
         echo "FAIL ${cmd}: exit ${rc}, no output"
         fail=1
         continue
     fi
-    if [ -z "${NO_VERSION_STRING[$cmd]:-}" ] && ! grep -Fq "$version" <<< "$out"; then
-        echo "WARN ${cmd}: expected version ${version}, got: $(head -n 2 <<< "$out" | tr '\n' ' ')"
+
+    version="${VERSION[$cmd]:-?}"
+    if [ -z "${NO_VERSION_STRING[$cmd]:-}" ] && [ "$version" != "?" ] \
+       && ! grep -Fq "$version" <<< "$out"; then
+        echo "WARN ${cmd}: conda installed ${version}, tool reports: $(head -n 2 <<< "$out" | tr '\n' ' ')"
     fi
     echo "ok   ${cmd} (${version}, env ${env})"
 done < "$TSV"

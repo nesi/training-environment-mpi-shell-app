@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
 # List the bioinformatics tools available in this training image.
+#
+# Versions come from /opt/tool-versions.tsv, written at build time from what
+# conda actually installed - nothing in this image pins a version, so this is
+# the only accurate source.
 set -euo pipefail
 
 TSV=/opt/tools.tsv
+VERSIONS=/opt/tool-versions.tsv
 
-printf '\n%-22s %-9s %s\n' "COMMAND" "VERSION" "DESCRIPTION"
-printf '%-22s %-9s %s\n' "----------------------" "---------" "-----------"
-while IFS=$'\t' read -r cmd env version description extra_env; do
+declare -A VERSION=()
+if [ -r "$VERSIONS" ]; then
+    while IFS=$'\t' read -r cmd version; do
+        [ -n "${cmd:-}" ] && VERSION["$cmd"]="$version"
+    done < "$VERSIONS"
+fi
+
+printf '\n%-22s %-10s %s\n' "COMMAND" "VERSION" "DESCRIPTION"
+printf '%-22s %-10s %s\n' "----------------------" "----------" "-----------"
+while IFS=$'\t' read -r cmd env package description extra_env; do
     [ -z "${cmd:-}" ] && continue
     case "$cmd" in \#*) continue ;; esac
-    printf '%-22s %-9s %s\n' "$cmd" "$version" "$description"
+    printf '%-22s %-10s %s\n' "$cmd" "${VERSION[$cmd]:-?}" "$description"
 done < "$TSV"
 printf '\nAll tools are on PATH - run them directly, e.g. "spades.py --help".\n'
 printf 'No "module load" and no environment activation is needed.\n\n'

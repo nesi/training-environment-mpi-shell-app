@@ -1,0 +1,62 @@
+# Every bioinformatics tool in the image, in one environment.
+#
+# No tool is pinned to a version. The image no longer tracks the NeSI (mahuika)
+# module versions: matching them forced the tools apart into five environments
+# that could not share a solve, and the duplicated dependencies cost roughly a
+# gigabyte. Letting conda pick a mutually compatible set collapses that to one
+# environment.
+#
+# The only constraints below are on the Python runtime and two of its libraries,
+# not on any bioinformatics tool. Each one is there because the build-time smoke
+# test caught a tool that could not start without it.
+#
+# The versions that actually resolved are recorded at build time in
+# /opt/tool-versions.tsv and shown by `mpi-tools`, so any image can report
+# exactly what it contains. Pin a tool here only if the workshop depends on a
+# specific version, and expect it to pull the environment apart again.
+name: bio
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # Python is held below 3.13, the one version constraint the image still needs.
+  # Porechop has no build for 3.13, so an unconstrained solve silently falls back
+  # to porechop 0.2.3_seqan2.1.1 - an ancient build that crashes on start. At 3.12
+  # conda picks porechop 0.2.4 and every other tool is unaffected.
+  - python <3.13
+
+  # assembly
+  - spades
+  - raven-assembler
+  - canu
+  - bandage
+  # assembly QA, mapping, polishing
+  - quast
+  - minimap2
+  - racon
+  - bowtie2
+  - samtools
+  # gene prediction and homology search
+  - prodigal
+  - augustus
+  - blast
+  - diamond
+  - kraken2
+  # read QC and manipulation
+  - fastqc
+  - fastp
+  - seqkit
+  - seqtk
+  - porechop
+  - nanofilt
+  - pycoqc
+  # Two dependencies the nanopore tools need but do not get on their own. Both
+  # were found by the build-time smoke test, which fails on a tool that cannot
+  # start:
+  #   setuptools <81 - Porechop and pycoQC import pkg_resources, which is not in
+  #     the Python standard library and which setuptools removed in 81. Without
+  #     this pin conda takes the newest setuptools and both tools die with
+  #     ModuleNotFoundError: No module named 'pkg_resources'.
+  #   pysam - pycoQC imports it, but its noarch package does not depend on it.
+  - setuptools <81
+  - pysam

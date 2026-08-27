@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Generate a wrapper in /usr/local/bin for every tool listed in tools.tsv.
+# Generate a wrapper in /usr/local/bin for every tool listed in tools.tsv, and
+# record the version each tool actually resolved to.
 #
 # Every tool is installed into a conda environment under /opt/conda/envs and is
 # started the same way: a small wrapper puts that environment's bin directory
@@ -12,16 +13,32 @@
 # the wrappers do not run conda's activation scripts: Bandage needs a headless
 # Qt platform, Canu needs JAVA_HOME, Augustus needs AUGUSTUS_CONFIG_PATH.
 #
+# Nothing in the image pins a version, so tools.tsv cannot state one. The third
+# column names the conda package instead, and this script writes the installed
+# version of that package to /opt/tool-versions.tsv. `mpi-tools` and
+# smoke-test.sh read that file, so both always report what is really installed.
+#
 # The build fails if a declared command is missing, so tools.tsv cannot drift
 # away from what is actually installed.
 set -euo pipefail
 
 TSV="${1:-/opt/tools.tsv}"
+VERSIONS="${2:-/opt/tool-versions.tsv}"
 ENV_ROOT=/opt/conda/envs
 BIN_DIR=/usr/local/bin
 
+# package -> version, read once per environment rather than per command
+declare -A PKG_VERSION=()
+for env_dir in "${ENV_ROOT}"/*; do
+    [ -d "$env_dir" ] || continue
+    while read -r pkg version _rest; do
+        [ -n "${pkg:-}" ] && PKG_VERSION["$pkg"]="$version"
+    done < <(micromamba list -p "$env_dir" 2>/dev/null | tail -n +4 | awk '{print $1, $2}')
+done
+
+: > "$VERSIONS"
 count=0
-while IFS=$'\t' read -r cmd env version description extra_env; do
+while IFS=$'\t' read -r cmd env package description extra_env; do
     [ -z "${cmd:-}" ] && continue
     case "$cmd" in \#*) continue ;; esac
 
@@ -30,6 +47,13 @@ while IFS=$'\t' read -r cmd env version description extra_env; do
         echo "ERROR: ${target} does not exist or is not executable (declared in ${TSV})" >&2
         exit 1
     fi
+
+    version="${PKG_VERSION[$package]:-}"
+    if [ -z "$version" ]; then
+        echo "ERROR: conda package '${package}' (declared for ${cmd} in ${TSV}) is not installed" >&2
+        exit 1
+    fi
+    printf '%s\t%s\n' "$cmd" "$version" >> "$VERSIONS"
 
     exports=""
     if [ -n "${extra_env:-}" ] && [ "${extra_env}" != "-" ]; then
@@ -54,3 +78,4 @@ WRAPPER
 done < "$TSV"
 
 echo "created ${count} tool wrappers in ${BIN_DIR}"
+echo "recorded ${count} tool versions in ${VERSIONS}"

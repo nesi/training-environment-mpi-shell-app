@@ -1,9 +1,0 @@
-# DIAMOND/2.2.1-GCC-15.2.0
-# Kept in its own environment: 2.2.1 requires zlib >= 1.3.2, which conflicts
-# with the older zlib pinned by samtools 1.16.1 and friends in `assembly`.
-name: diamond
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - diamond=2.2.1

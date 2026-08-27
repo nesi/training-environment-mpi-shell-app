@@ -73,30 +73,51 @@ RUN curl -Ls "https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSIO
         | tar -xj -C /usr/local bin/micromamba \
     && chmod +x /usr/local/bin/micromamba
 
-# bioinformatics tools, one environment per set of mutually compatible pins.
-# They are split because the pinned versions cannot coexist: DIAMOND 2.2.1,
-# Canu, Bandage and Augustus all need zlib >= 1.3.2 while SAMtools 1.16.1 pins
-# zlib < 1.3, and SPAdes 3.15.2 needs Python < 3.10 while the assembly
-# environment solves to 3.10.
+# Every bioinformatics tool, in one conda environment, with nothing pinned.
+#
+# Earlier images matched the NeSI (mahuika) module versions exactly. Those pins
+# could not co-exist in one solve - DIAMOND wanted a newer zlib than SAMtools
+# allowed, SPAdes wanted an older Python than everything else - so the tools were
+# split across five environments whose duplicated dependencies cost about a
+# gigabyte. Dropping the pins lets one solve cover every tool.
+#
+# The cleanup MUST run in this same RUN instruction. A docker layer only records
+# changes, so deleting a file in a later layer hides it without reclaiming its
+# space - the bytes stay in the layer that created them and are still pulled.
+#
+# Removed here:
+#   *.a, include/, man/, share/doc  - headers, static archives, documentation
+#   sysroot locale-archive          - two copies of a 213MB glibc locale archive, used
+#                                     only when cross-compiling; the container's own
+#                                     locale lives in /usr and is untouched
+#   jvm/lib/src.zip                 - JDK sources beside the JRE that Canu runs on
+#
+# Shared libraries are deliberately NOT touched: the toolchain directory holds the
+# boost .so files Augustus links against at run time, so deleting it wholesale leaves
+# augustus on PATH but unable to start. smoke-test.sh runs later in the build and
+# fails it on any tool that can no longer start.
 COPY envs/ /opt/envs/
-RUN micromamba create -y -f /opt/envs/assembly.yml \
-    && micromamba create -y -f /opt/envs/spades.yml \
-    && micromamba create -y -f /opt/envs/diamond.yml \
-    && micromamba create -y -f /opt/envs/qc.yml \
-    && micromamba create -y -f /opt/envs/extras.yml \
+RUN micromamba create -y -f /opt/envs/bio.yml \
     && micromamba clean --all --yes \
-    && rm -rf /opt/conda/pkgs
+    && rm -rf /opt/conda/pkgs \
+    && E=/opt/conda/envs/bio \
+    && find "$E" -name '*.a' -type f -delete \
+    && rm -rf "$E/include" "$E/man" "$E/share/man" "$E/share/doc" \
+    && find "$E/x86_64-conda-linux-gnu" -type d -name include -prune -exec rm -rf {} + 2>/dev/null || true \
+    && find "$E" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true \
+    && rm -f "$E"/x86_64-conda-linux-gnu/sysroot/usr/lib64/locale/locale-archive* \
+    && rm -f "$E/lib/jvm/lib/src.zip"
 
 # Augustus writes new species parameters into its config directory, and every
 # trainee runs as an ordinary user, so make that directory group/world writable.
-RUN chmod -R go+w /opt/conda/envs/extras/config
+RUN chmod -R go+w /opt/conda/envs/bio/config
 
 # expose every tool on PATH through a wrapper, so all tools start the same way
 COPY tools.tsv /opt/tools.tsv
 COPY make-wrappers.sh /opt/make-wrappers.sh
 COPY mpi-tools /usr/local/bin/mpi-tools
 RUN chmod +x /opt/make-wrappers.sh /usr/local/bin/mpi-tools \
-    && /opt/make-wrappers.sh /opt/tools.tsv
+    && /opt/make-wrappers.sh /opt/tools.tsv /opt/tool-versions.tsv
 
 ENV PATH="/usr/local/bin:${PATH}"
 
