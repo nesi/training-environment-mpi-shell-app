@@ -1,32 +1,40 @@
-# command	environment	version	description
-spades.py	spades	3.15.2	SPAdes genome assembler
-metaspades.py	spades	3.15.2	SPAdes metagenome assembler
-rnaspades.py	spades	3.15.2	SPAdes transcriptome assembler
-plasmidspades.py	spades	3.15.2	SPAdes plasmid assembler
-flye	assembly	2.9.1	Long read assembler
-quast.py	assembly	5.2.0	Assembly quality assessment
-metaquast.py	assembly	5.2.0	Assembly QA for metagenomes
-minimap2	assembly	2.24	Long read aligner
-racon	assembly	1.5.0	Consensus polishing
-bowtie2	assembly	2.4.5	Short read aligner
-bowtie2-build	assembly	2.4.5	Bowtie2 index builder
-bowtie2-inspect	assembly	2.4.5	Bowtie2 index inspector
-samtools	assembly	1.16.1	SAM/BAM/CRAM utilities
-prodigal	assembly	2.6.3	Prokaryotic gene prediction
-blastn	assembly	2.13.0	BLAST nucleotide vs nucleotide
-blastp	assembly	2.13.0	BLAST protein vs protein
-blastx	assembly	2.13.0	BLAST translated nucleotide vs protein
-tblastn	assembly	2.13.0	BLAST protein vs translated nucleotide
-tblastx	assembly	2.13.0	BLAST translated vs translated
-makeblastdb	assembly	2.13.0	Build a BLAST database
-blastdbcmd	assembly	2.13.0	Query a BLAST database
-kraken2	assembly	2.1.3	Taxonomic classification
-kraken2-build	assembly	2.1.3	Build a Kraken2 database
-kraken2-inspect	assembly	2.1.3	Inspect a Kraken2 database
-diamond	diamond	2.2.1	Fast protein aligner
-fastqc	qc	0.12.1	Read quality control
-fastp	qc	1.0.1	Read trimming and filtering
-seqkit	qc	2.10.1	FASTA/FASTQ toolkit
-porechop	qc	0.2.4	Nanopore adapter trimming
-NanoFilt	qc	2.8.0	Nanopore read filtering
-pycoQC	qc	2.5.2	Nanopore run QC report
+# command	environment	version	description	extra_env (KEY=VALUE;KEY=VALUE, - for none)
+spades.py	spades	3.15.2	SPAdes genome assembler	-
+metaspades.py	spades	3.15.2	SPAdes metagenome assembler	-
+rnaspades.py	spades	3.15.2	SPAdes transcriptome assembler	-
+plasmidspades.py	spades	3.15.2	SPAdes plasmid assembler	-
+raven	assembly	1.8.3	Long read assembler	-
+canu	extras	2.3	Configurable long read assembler	JAVA_HOME=/opt/conda/envs/extras/lib/jvm
+Bandage	extras	0.9.0	Assembly graph visualiser (headless)	QT_QPA_PLATFORM=offscreen
+quast.py	assembly	5.2.0	Assembly quality assessment	-
+metaquast.py	assembly	5.2.0	Assembly QA for metagenomes	-
+minimap2	assembly	2.24	Long read aligner	-
+racon	assembly	1.5.0	Consensus polishing	-
+bowtie2	assembly	2.4.5	Short read aligner	-
+bowtie2-build	assembly	2.4.5	Bowtie2 index builder	-
+bowtie2-inspect	assembly	2.4.5	Bowtie2 index inspector	-
+samtools	assembly	1.16.1	SAM/BAM/CRAM utilities	-
+prodigal	assembly	2.6.3	Prokaryotic gene prediction	-
+augustus	extras	3.5.0	Eukaryote gene prediction	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/extras/config
+etraining	extras	3.5.0	Train an Augustus model	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/extras/config
+new_species.pl	extras	3.5.0	Create an Augustus species config	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/extras/config
+gff2gbSmallDNA.pl	extras	3.5.0	Convert GFF to GenBank for Augustus	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/extras/config
+optimize_augustus.pl	extras	3.5.0	Optimise Augustus parameters	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/extras/config
+blastn	assembly	2.13.0	BLAST nucleotide vs nucleotide	-
+blastp	assembly	2.13.0	BLAST protein vs protein	-
+blastx	assembly	2.13.0	BLAST translated nucleotide vs protein	-
+tblastn	assembly	2.13.0	BLAST protein vs translated nucleotide	-
+tblastx	assembly	2.13.0	BLAST translated vs translated	-
+makeblastdb	assembly	2.13.0	Build a BLAST database	-
+blastdbcmd	assembly	2.13.0	Query a BLAST database	-
+kraken2	assembly	2.1.3	Taxonomic classification	-
+kraken2-build	assembly	2.1.3	Build a Kraken2 database	-
+kraken2-inspect	assembly	2.1.3	Inspect a Kraken2 database	-
+diamond	diamond	2.2.1	Fast protein aligner	-
+fastqc	qc	0.12.1	Read quality control	-
+fastp	qc	1.0.1	Read trimming and filtering	-
+seqkit	qc	2.10.1	FASTA/FASTQ toolkit	-
+seqtk	qc	1.4	Lightweight FASTA/FASTQ toolkit	-
+porechop	qc	0.2.4	Nanopore adapter trimming	-
+NanoFilt	qc	2.8.0	Nanopore read filtering	-
+pycoQC	qc	2.5.2	Nanopore run QC report	-

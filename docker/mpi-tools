@@ -4,12 +4,12 @@ set -euo pipefail
 
 TSV=/opt/tools.tsv
 
-printf '\n%-16s %-9s %s\n' "COMMAND" "VERSION" "DESCRIPTION"
-printf '%-16s %-9s %s\n' "----------------" "---------" "-----------"
-while IFS=$'\t' read -r cmd env version description; do
+printf '\n%-22s %-9s %s\n' "COMMAND" "VERSION" "DESCRIPTION"
+printf '%-22s %-9s %s\n' "----------------------" "---------" "-----------"
+while IFS=$'\t' read -r cmd env version description extra_env; do
     [ -z "${cmd:-}" ] && continue
     case "$cmd" in \#*) continue ;; esac
-    printf '%-16s %-9s %s\n' "$cmd" "$version" "$description"
+    printf '%-22s %-9s %s\n' "$cmd" "$version" "$description"
 done < "$TSV"
 printf '\nAll tools are on PATH - run them directly, e.g. "spades.py --help".\n'
 printf 'No "module load" and no environment activation is needed.\n\n'

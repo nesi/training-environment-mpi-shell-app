@@ -15,7 +15,13 @@ declare -A PROBE=(
     [quast.py]="--version"
     [metaquast.py]="--version"
     [racon]="--version"
+    [canu]="-version"
     [prodigal]="-v"
+    [augustus]="--version"
+    [etraining]=""
+    [new_species.pl]=""
+    [gff2gbSmallDNA.pl]=""
+    [optimize_augustus.pl]=""
     [blastn]="-version"
     [blastp]="-version"
     [blastx]="-version"
@@ -32,9 +38,20 @@ declare -A PROBE=(
     [pycoQC]="--version"
     [fastqc]="--version"
     [seqkit]="version"
+    [seqtk]=""
 )
 
-while IFS=$'\t' read -r cmd env version description; do
+# tools that never print their package version, so the version check is skipped:
+# canu reports a git revision, the Augustus helper scripts print only usage.
+declare -A NO_VERSION_STRING=(
+    [canu]=1
+    [etraining]=1
+    [new_species.pl]=1
+    [gff2gbSmallDNA.pl]=1
+    [optimize_augustus.pl]=1
+)
+
+while IFS=$'\t' read -r cmd env version description extra_env; do
     [ -z "${cmd:-}" ] && continue
     case "$cmd" in \#*) continue ;; esac
 
@@ -44,7 +61,7 @@ while IFS=$'\t' read -r cmd env version description; do
         continue
     fi
 
-    probe="${PROBE[$cmd]:---version}"
+    probe="${PROBE[$cmd]---version}"
     out=$("$cmd" $probe 2>&1)
     rc=$?
     out=$(printf '%s' "$out" | tr -d '\000')
@@ -54,7 +71,7 @@ while IFS=$'\t' read -r cmd env version description; do
         fail=1
         continue
     fi
-    if ! grep -Fq "$version" <<< "$out"; then
+    if [ -z "${NO_VERSION_STRING[$cmd]:-}" ] && ! grep -Fq "$version" <<< "$out"; then
         echo "WARN ${cmd}: expected version ${version}, got: $(head -n 2 <<< "$out" | tr '\n' ' ')"
     fi
     echo "ok   ${cmd} (${version}, env ${env})"

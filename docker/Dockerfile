@@ -74,16 +74,22 @@ RUN curl -Ls "https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSIO
     && chmod +x /usr/local/bin/micromamba
 
 # bioinformatics tools, one environment per set of mutually compatible pins.
-# They are split because the pinned versions cannot coexist: DIAMOND 2.2.1 needs
-# zlib >= 1.3.2 while SAMtools 1.16.1 pins zlib < 1.3, and SPAdes 3.15.2 needs
-# Python < 3.10 while Flye 2.9.1 pulls in 3.10.
+# They are split because the pinned versions cannot coexist: DIAMOND 2.2.1,
+# Canu, Bandage and Augustus all need zlib >= 1.3.2 while SAMtools 1.16.1 pins
+# zlib < 1.3, and SPAdes 3.15.2 needs Python < 3.10 while the assembly
+# environment solves to 3.10.
 COPY envs/ /opt/envs/
 RUN micromamba create -y -f /opt/envs/assembly.yml \
     && micromamba create -y -f /opt/envs/spades.yml \
     && micromamba create -y -f /opt/envs/diamond.yml \
     && micromamba create -y -f /opt/envs/qc.yml \
+    && micromamba create -y -f /opt/envs/extras.yml \
     && micromamba clean --all --yes \
     && rm -rf /opt/conda/pkgs
+
+# Augustus writes new species parameters into its config directory, and every
+# trainee runs as an ordinary user, so make that directory group/world writable.
+RUN chmod -R go+w /opt/conda/envs/extras/config
 
 # expose every tool on PATH through a wrapper, so all tools start the same way
 COPY tools.tsv /opt/tools.tsv
