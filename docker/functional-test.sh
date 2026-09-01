@@ -98,8 +98,18 @@ samtools flagstat bt2.bam > flagstat.txt 2>>st.log;              check $? "samto
 prodigal -i ref.fa -a genes.faa -d genes.fna -o genes.gbk > prodigal.log 2>&1; check $? "prodigal genes"
 test -s genes.faa;                                               check $? "prodigal proteins produced"
 
-augustus --species=human ref.fa > augustus.gff 2>augustus.log;   check $? "augustus gene prediction"
+# augustus finds exactly one gene in this random 30kb sequence. The seed above is
+# fixed, so that is stable - but if the generator changes and augustus predicts
+# nothing, the getAnnoFasta.pl checks below fail with empty output rather than an
+# error, because there are no sequence comments to convert.
+augustus --species=human --codingseq=on ref.fa > augustus.gff 2>augustus.log; check $? "augustus gene prediction"
 test -s augustus.gff;                                            check $? "augustus gff produced"
+grep -q $'\tgene\t' augustus.gff;                                check $? "augustus predicted at least one gene"
+
+# getAnnoFasta.pl turns the sequence comments in the augustus output into fasta
+getAnnoFasta.pl augustus.gff > getannofasta.log 2>&1;            check $? "getAnnoFasta.pl"
+test -s augustus.aa;                                             check $? "getAnnoFasta.pl proteins produced"
+test -s augustus.codingseq;                                      check $? "getAnnoFasta.pl coding seqs produced"
 
 makeblastdb -in ref.fa -dbtype nucl -out refdb > blast.log 2>&1; check $? "makeblastdb"
 blastn -query ref.fa -db refdb -outfmt 6 -out blastn.tsv >> blast.log 2>&1; check $? "blastn"
