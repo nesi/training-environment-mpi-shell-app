@@ -38,7 +38,13 @@ dependencies:
   - samtools
   # gene prediction and homology search
   - prodigal
-  - augustus
+  # Augustus is held at 3.5 or newer for its perl helper scripts. The workshop
+  # uses getAnnoFasta.pl, and new_species.pl and etraining are needed to train a
+  # species. Older builds ship only augustus and etraining, and an unconstrained
+  # solve can reach back to 3.2.2 - which installs cleanly and leaves those
+  # commands missing. Removing one unrelated tool was enough to trigger that, so
+  # this pin stays even though the current solve picks 3.5.0 unaided.
+  - augustus >=3.5
   - blast
   - diamond
   - kraken2

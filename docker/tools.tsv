@@ -20,6 +20,7 @@ etraining	bio	augustus	Train an Augustus model	AUGUSTUS_CONFIG_PATH=/opt/conda/e
 new_species.pl	bio	augustus	Create an Augustus species config	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/bio/config
 gff2gbSmallDNA.pl	bio	augustus	Convert GFF to GenBank for Augustus	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/bio/config
 optimize_augustus.pl	bio	augustus	Optimise Augustus parameters	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/bio/config
+getAnnoFasta.pl	bio	augustus	Extract protein and coding sequences from Augustus output	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/bio/config
 blastn	bio	blast	BLAST nucleotide vs nucleotide	-
 blastp	bio	blast	BLAST protein vs protein	-
 blastx	bio	blast	BLAST translated nucleotide vs protein	-

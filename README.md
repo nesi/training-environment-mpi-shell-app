@@ -7,61 +7,112 @@ https://genomicsaotearoa.github.io/hts_workshop_mpi/
 
 ## Tools
 
-No tool is pinned to a version. Versions are whatever conda resolved when the image was
-built, and each image records its own - run `mpi-tools` inside the app to print the table
-with the versions that image actually contains.
-
 Every tool is on `PATH` in every shell and notebook terminal and is started by typing its
-name. No `module load`, no `conda activate`, no `source` of an environment.
+name. No `module load`, no `conda activate`, no `source` of an environment. Run
+`mpi-tools` inside the app to print this table with the versions that image contains.
 
-| Command | Version in v0.5.0 | Purpose |
+Almost nothing is pinned - versions are whatever conda resolved when the image was built.
+The one exception is Augustus, held at 3.5 or newer because older builds drop the perl
+helper scripts the workshop uses.
+
+Flye was removed in v0.4.0 after it crashed on the workshop dataset here and on NeSI;
+`raven` replaced it, with `canu` as the more configurable alternative.
+
+### Assembly
+
+| Command | Version | Example |
 |---|---|---|
-| `spades.py`, `metaspades.py`, `rnaspades.py`, `plasmidspades.py` | 4.3.0 | Short read assembly |
-| `raven` | 1.8.3 | Long read assembly |
-| `canu` | 2.3 | Long read assembly, more configurable |
-| `Bandage` | 0.9.0 | Assembly graph inspection and rendering |
-| `quast.py`, `metaquast.py` | 5.3.0 | Assembly quality assessment |
-| `minimap2` | 2.31 | Long read alignment |
-| `racon` | 1.5.0 | Consensus polishing |
-| `bowtie2`, `bowtie2-build`, `bowtie2-inspect` | 2.5.5 | Short read alignment |
-| `samtools` | 1.23 | SAM/BAM/CRAM manipulation |
-| `prodigal` | 2.6.3 | Prokaryote gene prediction |
-| `augustus`, `etraining`, `new_species.pl`, `gff2gbSmallDNA.pl`, `optimize_augustus.pl` | 3.5.0 | Eukaryote gene prediction |
-| `blastn`, `blastp`, `blastx`, `tblastn`, `tblastx`, `makeblastdb`, `blastdbcmd` | 2.16.0 | Homology search |
-| `diamond` | 2.2.5 | Fast protein alignment |
-| `kraken2`, `kraken2-build`, `kraken2-inspect` | 2.17.1 | Taxonomic classification |
-| `fastqc` | 0.12.1 | Read quality control |
-| `fastp` | 1.3.6 | Read trimming and filtering |
-| `seqkit` | 2.13.0 | FASTA/FASTQ manipulation |
-| `seqtk` | 1.5 | FASTA/FASTQ manipulation |
-| `porechop` | 0.2.4 | Nanopore adapter trimming |
-| `NanoFilt` | 2.8.0 | Nanopore read filtering |
-| `pycoQC` | 2.5.0.3 | Nanopore run QC report |
+| `spades.py` | 4.3.0 | `spades.py -1 r1.fq -2 r2.fq -o out -t 8` |
+| `metaspades.py` | 4.3.0 | `metaspades.py -1 r1.fq -2 r2.fq -o out` |
+| `rnaspades.py` | 4.3.0 | `rnaspades.py -1 r1.fq -2 r2.fq -o out` |
+| `plasmidspades.py` | 4.3.0 | `plasmidspades.py -1 r1.fq -2 r2.fq -o out` |
+| `raven` | 1.8.3 | `raven -t 8 --graphical-fragment-assembly asm.gfa reads.fq > asm.fa` |
+| `canu` | 2.3 | `canu -p run -d out genomeSize=5m -nanopore reads.fq` |
+| `Bandage` | 0.9.0 | `Bandage info asm.gfa` / `Bandage image asm.gfa asm.png` |
 
-The versions above are the ones the v0.5.0 image resolved to. Nothing is pinned, so a
-later image may differ - `mpi-tools` inside the app always prints what that image really
-contains, and is the version of record.
+### Assembly QA, mapping and polishing
+
+| Command | Version | Example |
+|---|---|---|
+| `quast.py` | 5.3.0 | `quast.py -o out -r ref.fa contigs.fasta` |
+| `metaquast.py` | 5.3.0 | `metaquast.py -o out contigs.fasta` |
+| `minimap2` | 2.31 | `minimap2 -ax map-ont ref.fa reads.fq > aln.sam` |
+| `racon` | 1.5.0 | `racon reads.fq overlaps.paf contigs.fa > polished.fa` |
+| `bowtie2-build` | 2.5.5 | `bowtie2-build ref.fa refidx` |
+| `bowtie2` | 2.5.5 | `bowtie2 -x refidx -1 r1.fq -2 r2.fq -S aln.sam` |
+| `bowtie2-inspect` | 2.5.5 | `bowtie2-inspect -s refidx` |
+| `samtools` | 1.23 | `samtools sort -o aln.bam aln.sam` then `samtools index aln.bam` |
+
+### Gene prediction
+
+| Command | Version | Example |
+|---|---|---|
+| `prodigal` | 2.6.3 | `prodigal -i contigs.fa -a genes.faa -d genes.fna -o genes.gbk` |
+| `augustus` | 3.5.0 | `augustus --species=human --codingseq=on contigs.fa > genes.gff` |
+| `getAnnoFasta.pl` | 3.5.0 | `getAnnoFasta.pl genes.gff` - writes `genes.aa` and `genes.codingseq` |
+| `etraining` | 3.5.0 | `etraining --species=mybug training.gb` |
+| `new_species.pl` | 3.5.0 | `new_species.pl --species=mybug` |
+| `gff2gbSmallDNA.pl` | 3.5.0 | `gff2gbSmallDNA.pl genes.gff genome.fa 1000 training.gb` |
+| `optimize_augustus.pl` | 3.5.0 | `optimize_augustus.pl --species=mybug training.gb` |
+
+### Homology search and classification
+
+| Command | Version | Example |
+|---|---|---|
+| `makeblastdb` | 2.16.0 | `makeblastdb -in ref.fa -dbtype nucl -out refdb` |
+| `blastn` | 2.16.0 | `blastn -query q.fa -db refdb -outfmt 6 -out hits.tsv` |
+| `blastp` | 2.16.0 | `blastp -query prot.faa -db protdb -outfmt 6` |
+| `blastx` | 2.16.0 | `blastx -query q.fa -db protdb -outfmt 6` |
+| `tblastn` | 2.16.0 | `tblastn -query prot.faa -db refdb -outfmt 6` |
+| `tblastx` | 2.16.0 | `tblastx -query q.fa -db refdb -outfmt 6` |
+| `blastdbcmd` | 2.16.0 | `blastdbcmd -db refdb -entry all -outfmt "%t"` |
+| `diamond` | 2.2.5 | `diamond makedb --in prot.faa -d protdb` then `diamond blastp -q q.faa -d protdb -o hits.tsv` |
+| `kraken2` | 2.17.1 | `kraken2 --db mydb --report k.report reads.fq > k.out` |
+| `kraken2-build` | 2.17.1 | `kraken2-build --build --db mydb --threads 4` |
+| `kraken2-inspect` | 2.17.1 | `kraken2-inspect --db mydb` |
+
+### Read QC and manipulation
+
+| Command | Version | Example |
+|---|---|---|
+| `fastqc` | 0.12.1 | `fastqc -o qc_out reads.fq` |
+| `fastp` | 1.3.6 | `fastp -i r1.fq -I r2.fq -o t1.fq -O t2.fq -h fastp.html` |
+| `seqkit` | 2.13.0 | `seqkit stats reads.fq` |
+| `seqtk` | 1.5 | `seqtk seq -A reads.fq > reads.fa` |
+| `porechop` | 0.2.4 | `porechop -i reads.fq -o trimmed.fq --threads 4` |
+| `NanoFilt` | 2.8.0 | `NanoFilt -q 10 -l 500 < reads.fq > filtered.fq` |
+| `pycoQC` | 2.5.0.3 | `pycoQC -f sequencing_summary.txt -o pycoqc.html` |
+
+Versions above are what the v0.6.0 image resolved to. Nothing but Augustus is pinned, so
+a later image may differ - `mpi-tools` is the version of record.
 
 `bioawk`, `git`, `rsync`, `tree`, `vim`, `nano` and JupyterLab are also installed.
 
 `module` still exists as a no-op that exits 0, so workshop material copied from mahuika
 that still contains `module load` lines keeps running.
 
-### Versions are no longer matched to mahuika
+### Versions are not matched to mahuika
 
 Earlier images pinned every tool to the version of the matching NeSI (mahuika) module.
 Those pins could not co-exist in a single conda solve, so the tools were split across
 five environments, and the dependencies each one duplicated cost roughly a gigabyte.
 
 Dropping the pins collapsed that to one environment and, together with the build cleanup
-below, took the image from 6.13 GB to 4.50 GB. The trade is that versions drift:
+below, took the image from 6.13 GB to about 4.4 GB. The trade is that versions drift:
 rebuilding six months from now may not produce the same versions as today. Because the
 workshop app is pinned to a tagged image, a given tag stays fixed once built - the drift
 only appears when a new image is built.
 
 If a workshop exercise genuinely depends on a specific version, pin that one tool in
-`docker/envs/bio.yml` and rebuild. Expect a single pin to be enough to force the
-environment apart again, so pin only what is actually needed.
+`docker/envs/bio.yml` and rebuild. Pin only what is actually needed.
+
+Removing a tool can move the others. Dropping Canu during v0.6.0 development changed the
+solve enough that Augustus fell back from 3.5.0 to 3.2.2, an old build that ships only
+`augustus` and `etraining` - the perl helper scripts simply vanish. Nothing errors: the
+packages install cleanly and the commands are missing afterwards. The build catches it
+because `make-wrappers.sh` fails on any command in `tools.tsv` that is not present, which
+is why `augustus >=3.5` is pinned. Re-check `mpi-tools` output after changing the tool
+list.
 
 ## How the tools are installed
 
@@ -120,7 +171,7 @@ docker run --rm mpi-shell:test bash /opt/functional-test.sh
 
 The functional test covers assembly (SPAdes, Raven, Canu), assembly graph rendering
 (Bandage), QA (QUAST), mapping and polishing (minimap2, Racon, Bowtie2, SAMtools), gene
-prediction (prodigal, Augustus), homology search (BLAST, DIAMOND), classification
+prediction (prodigal, Augustus, getAnnoFasta.pl), homology search (BLAST, DIAMOND), classification
 (Kraken2 with a custom database built during the test) and read QC (FastQC, fastp,
 SeqKit, seqtk, Porechop, NanoFilt, pycoQC).
 
@@ -191,7 +242,7 @@ rm /home/shared/trainer1/level1.tar.gz
 
 ## Releasing
 
-Current release: **v0.5.0** (single conda environment, no version pins; image reduced from 6.13 GB to 4.50 GB).
+Current release: **v0.6.0** (`getAnnoFasta.pl` exposed on PATH; Augustus pinned to >=3.5).
 
 Any push to `main` builds the image and pushes it to
 `ghcr.io/nesi/training-environment-mpi-shell-app`. A tag push builds and publishes that
@@ -208,13 +259,13 @@ To cut a release:
 
    ``` bash
    git checkout main && git pull --ff-only
-   git tag -a v0.5.0 -m "v0.5.0: summary of the change" && git push origin v0.5.0
+   git tag -a v0.6.0 -m "v0.6.0: summary of the change" && git push origin v0.6.0
    ```
 
 5. Wait for the tag's build to finish, then confirm the image is pullable:
 
    ``` bash
-   docker pull ghcr.io/nesi/training-environment-mpi-shell-app:v0.5.0
+   docker pull ghcr.io/nesi/training-environment-mpi-shell-app:v0.6.0
    ```
 
 6. Bump this app's version in the `training-environment` vars repo to deploy it.

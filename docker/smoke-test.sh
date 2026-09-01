@@ -33,6 +33,7 @@ declare -A PROBE=(
     [new_species.pl]=""
     [gff2gbSmallDNA.pl]=""
     [optimize_augustus.pl]=""
+    [getAnnoFasta.pl]=""
     [blastn]="-version"
     [blastp]="-version"
     [blastx]="-version"
@@ -60,6 +61,7 @@ declare -A NO_VERSION_STRING=(
     [new_species.pl]=1
     [gff2gbSmallDNA.pl]=1
     [optimize_augustus.pl]=1
+    [getAnnoFasta.pl]=1
 )
 
 while IFS=$'\t' read -r cmd env package description extra_env; do
