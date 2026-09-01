@@ -7,18 +7,23 @@ https://genomicsaotearoa.github.io/hts_workshop_mpi/
 
 ## Tools
 
-No tool is pinned to a version. Versions are whatever conda resolved when the image was
-built, and each image records its own - run `mpi-tools` inside the app to print the table
-with the versions that image actually contains.
+Almost nothing is pinned. Versions are whatever conda resolved when the image was built,
+and each image records its own - run `mpi-tools` inside the app to print the table with
+the versions that image actually contains. The one exception is Augustus, held at 3.5 or
+newer because older builds drop the perl helper scripts the workshop uses.
 
 Every tool is on `PATH` in every shell and notebook terminal and is started by typing its
 name. No `module load`, no `conda activate`, no `source` of an environment.
 
-| Command | Version in v0.5.0 | Purpose |
+Two changes to the long read assemblers, both at MPI's request. Flye was removed in
+v0.4.0 after it crashed on the workshop dataset here and on NeSI; `raven` replaced it.
+Canu was removed in v0.6.0 - it was there for trainees wanting to extend themselves, and
+they can reach it through NeSI outside the training session instead.
+
+| Command | Version in v0.6.0 | Purpose |
 |---|---|---|
 | `spades.py`, `metaspades.py`, `rnaspades.py`, `plasmidspades.py` | 4.3.0 | Short read assembly |
 | `raven` | 1.8.3 | Long read assembly |
-| `canu` | 2.3 | Long read assembly, more configurable |
 | `Bandage` | 0.9.0 | Assembly graph inspection and rendering |
 | `quast.py`, `metaquast.py` | 5.3.0 | Assembly quality assessment |
 | `minimap2` | 2.31 | Long read alignment |
@@ -26,7 +31,7 @@ name. No `module load`, no `conda activate`, no `source` of an environment.
 | `bowtie2`, `bowtie2-build`, `bowtie2-inspect` | 2.5.5 | Short read alignment |
 | `samtools` | 1.23 | SAM/BAM/CRAM manipulation |
 | `prodigal` | 2.6.3 | Prokaryote gene prediction |
-| `augustus`, `etraining`, `new_species.pl`, `gff2gbSmallDNA.pl`, `optimize_augustus.pl` | 3.5.0 | Eukaryote gene prediction |
+| `augustus`, `etraining`, `new_species.pl`, `gff2gbSmallDNA.pl`, `optimize_augustus.pl`, `getAnnoFasta.pl` | 3.5.0 | Eukaryote gene prediction |
 | `blastn`, `blastp`, `blastx`, `tblastn`, `tblastx`, `makeblastdb`, `blastdbcmd` | 2.16.0 | Homology search |
 | `diamond` | 2.2.5 | Fast protein alignment |
 | `kraken2`, `kraken2-build`, `kraken2-inspect` | 2.17.1 | Taxonomic classification |
@@ -38,7 +43,7 @@ name. No `module load`, no `conda activate`, no `source` of an environment.
 | `NanoFilt` | 2.8.0 | Nanopore read filtering |
 | `pycoQC` | 2.5.0.3 | Nanopore run QC report |
 
-The versions above are the ones the v0.5.0 image resolved to. Nothing is pinned, so a
+The versions above are the ones the v0.6.0 image resolved to. Nothing is pinned, so a
 later image may differ - `mpi-tools` inside the app always prints what that image really
 contains, and is the version of record.
 
@@ -63,6 +68,14 @@ If a workshop exercise genuinely depends on a specific version, pin that one too
 `docker/envs/bio.yml` and rebuild. Expect a single pin to be enough to force the
 environment apart again, so pin only what is actually needed.
 
+Removing a tool can move the others. Dropping Canu in v0.6.0 changed the solve enough
+that Augustus fell back from 3.5.0 to 3.2.2, an old build that ships only `augustus` and
+`etraining` - the perl helper scripts simply vanish. Nothing errors: the packages install
+cleanly and the commands are missing afterwards. The build catches it because
+`make-wrappers.sh` fails on any command in `tools.tsv` that is not present, which is why
+`augustus >=3.5` is now in `bio.yml`. Re-check `mpi-tools` output after changing the tool
+list.
+
 ## How the tools are installed
 
 Every tool is installed with `micromamba` into a single environment,
@@ -79,10 +92,9 @@ checks against, so neither can report a version the image does not contain.
 
 The wrappers do not run conda's activation scripts, so a tool that needs an environment
 variable declares it in the fifth column of `docker/tools.tsv` as `KEY=VALUE` pairs
-separated by semicolons (`-` when it needs none). Three tools use this:
+separated by semicolons (`-` when it needs none). Two tools use this:
 
 * `Bandage` - `QT_QPA_PLATFORM=offscreen`, so it runs headless with no X server.
-* `canu` - `JAVA_HOME`, pointing at the JDK inside the environment.
 * `augustus` and its helper scripts - `AUGUSTUS_CONFIG_PATH`.
 
 ### Image size
@@ -118,9 +130,9 @@ docker run --rm mpi-shell:test bash /opt/smoke-test.sh
 docker run --rm mpi-shell:test bash /opt/functional-test.sh
 ```
 
-The functional test covers assembly (SPAdes, Raven, Canu), assembly graph rendering
+The functional test covers assembly (SPAdes, Raven), assembly graph rendering
 (Bandage), QA (QUAST), mapping and polishing (minimap2, Racon, Bowtie2, SAMtools), gene
-prediction (prodigal, Augustus), homology search (BLAST, DIAMOND), classification
+prediction (prodigal, Augustus, getAnnoFasta.pl), homology search (BLAST, DIAMOND), classification
 (Kraken2 with a custom database built during the test) and read QC (FastQC, fastp,
 SeqKit, seqtk, Porechop, NanoFilt, pycoQC).
 
@@ -159,10 +171,15 @@ sets to `/opt/conda/envs/extras/config`. That directory is writable, so `new_spe
 and `etraining` can add a species during the workshop:
 
 ```bash
-augustus --species=human contigs.fasta > genes.gff
+augustus --species=human --codingseq=on contigs.fasta > genes.gff
+getAnnoFasta.pl genes.gff          # writes genes.aa and genes.codingseq
 new_species.pl --species=mybug
 etraining --species=mybug training.gb
 ```
+
+`getAnnoFasta.pl` turns the sequence comments Augustus writes into its output into fasta
+files. Augustus emits protein comments by default; add `--codingseq=on` to get the
+coding sequences as well.
 
 ## Manual changes after deployment
 
@@ -191,7 +208,7 @@ rm /home/shared/trainer1/level1.tar.gz
 
 ## Releasing
 
-Current release: **v0.5.0** (single conda environment, no version pins; image reduced from 6.13 GB to 4.50 GB).
+Current release: **v0.6.0** (Canu removed, `getAnnoFasta.pl` exposed).
 
 Any push to `main` builds the image and pushes it to
 `ghcr.io/nesi/training-environment-mpi-shell-app`. A tag push builds and publishes that
@@ -208,13 +225,13 @@ To cut a release:
 
    ``` bash
    git checkout main && git pull --ff-only
-   git tag -a v0.5.0 -m "v0.5.0: summary of the change" && git push origin v0.5.0
+   git tag -a v0.6.0 -m "v0.6.0: summary of the change" && git push origin v0.6.0
    ```
 
 5. Wait for the tag's build to finish, then confirm the image is pullable:
 
    ``` bash
-   docker pull ghcr.io/nesi/training-environment-mpi-shell-app:v0.5.0
+   docker pull ghcr.io/nesi/training-environment-mpi-shell-app:v0.6.0
    ```
 
 6. Bump this app's version in the `training-environment` vars repo to deploy it.

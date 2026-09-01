@@ -5,6 +5,6 @@ subcategory: Servers
 role: batch_connect
 description: |
   This app will launch a Jupyter Lab server for MPI bioinformatics training,
-  with SPAdes, Raven, Canu, Bandage, QUAST, minimap2, Racon, Bowtie2, SAMtools,
+  with SPAdes, Raven, Bandage, QUAST, minimap2, Racon, Bowtie2, SAMtools,
   prodigal, Augustus, BLAST, DIAMOND and Kraken2 on PATH. Run `mpi-tools` to
   list them.

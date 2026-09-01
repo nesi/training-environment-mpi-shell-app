@@ -26,13 +26,13 @@ declare -A PROBE=(
     [quast.py]="--version"
     [metaquast.py]="--version"
     [racon]="--version"
-    [canu]="-version"
     [prodigal]="-v"
     [augustus]="--version"
     [etraining]=""
     [new_species.pl]=""
     [gff2gbSmallDNA.pl]=""
     [optimize_augustus.pl]=""
+    [getAnnoFasta.pl]=""
     [blastn]="-version"
     [blastp]="-version"
     [blastx]="-version"
@@ -53,13 +53,13 @@ declare -A PROBE=(
 )
 
 # tools that never print their package version, so the version check is skipped:
-# canu reports a git revision, the Augustus helper scripts print only usage.
+# the Augustus helper scripts print only usage.
 declare -A NO_VERSION_STRING=(
-    [canu]=1
     [etraining]=1
     [new_species.pl]=1
     [gff2gbSmallDNA.pl]=1
     [optimize_augustus.pl]=1
+    [getAnnoFasta.pl]=1
 )
 
 while IFS=$'\t' read -r cmd env package description extra_env; do

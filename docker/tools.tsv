@@ -4,7 +4,6 @@ metaspades.py	bio	spades	SPAdes metagenome assembler	-
 rnaspades.py	bio	spades	SPAdes transcriptome assembler	-
 plasmidspades.py	bio	spades	SPAdes plasmid assembler	-
 raven	bio	raven-assembler	Long read assembler	-
-canu	bio	canu	Configurable long read assembler	JAVA_HOME=/opt/conda/envs/bio/lib/jvm
 Bandage	bio	bandage	Assembly graph visualiser (headless)	QT_QPA_PLATFORM=offscreen
 quast.py	bio	quast	Assembly quality assessment	-
 metaquast.py	bio	quast	Assembly QA for metagenomes	-
@@ -20,6 +19,7 @@ etraining	bio	augustus	Train an Augustus model	AUGUSTUS_CONFIG_PATH=/opt/conda/e
 new_species.pl	bio	augustus	Create an Augustus species config	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/bio/config
 gff2gbSmallDNA.pl	bio	augustus	Convert GFF to GenBank for Augustus	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/bio/config
 optimize_augustus.pl	bio	augustus	Optimise Augustus parameters	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/bio/config
+getAnnoFasta.pl	bio	augustus	Extract protein and coding sequences from Augustus output	AUGUSTUS_CONFIG_PATH=/opt/conda/envs/bio/config
 blastn	bio	blast	BLAST nucleotide vs nucleotide	-
 blastp	bio	blast	BLAST protein vs protein	-
 blastx	bio	blast	BLAST translated nucleotide vs protein	-

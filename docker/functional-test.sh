@@ -74,13 +74,6 @@ Bandage info raven.gfa > bandage.info 2>bandage.log;             check $? "Banda
 Bandage image raven.gfa raven.png >> bandage.log 2>&1;           check $? "Bandage image"
 test -s raven.png;                                               check $? "Bandage png produced"
 
-# canu is the configurable alternative to raven; -fast and the low coverage
-# thresholds keep it inside a couple of minutes on this toy dataset
-canu -p canu -d canu_out genomeSize=30k -fast useGrid=false \
-     maxThreads=4 maxMemory=8g minInputCoverage=1 stopOnLowCoverage=1 \
-     -nanopore long.fq > canu.log 2>&1;                          check $? "canu assembly"
-test -s canu_out/canu.contigs.fasta;                             check $? "canu contigs produced"
-
 quast.py -o quast_out -r ref.fa spades_out/contigs.fasta > quast.log 2>&1; check $? "quast.py"
 test -s quast_out/report.txt;                                    check $? "quast report produced"
 
@@ -98,8 +91,13 @@ samtools flagstat bt2.bam > flagstat.txt 2>>st.log;              check $? "samto
 prodigal -i ref.fa -a genes.faa -d genes.fna -o genes.gbk > prodigal.log 2>&1; check $? "prodigal genes"
 test -s genes.faa;                                               check $? "prodigal proteins produced"
 
-augustus --species=human ref.fa > augustus.gff 2>augustus.log;   check $? "augustus gene prediction"
+augustus --species=human --codingseq=on ref.fa > augustus.gff 2>augustus.log; check $? "augustus gene prediction"
 test -s augustus.gff;                                            check $? "augustus gff produced"
+
+# getAnnoFasta.pl turns the sequence comments in the augustus output into fasta
+getAnnoFasta.pl augustus.gff > getannofasta.log 2>&1;            check $? "getAnnoFasta.pl"
+test -s augustus.aa;                                             check $? "getAnnoFasta.pl proteins produced"
+test -s augustus.codingseq;                                      check $? "getAnnoFasta.pl coding seqs produced"
 
 makeblastdb -in ref.fa -dbtype nucl -out refdb > blast.log 2>&1; check $? "makeblastdb"
 blastn -query ref.fa -db refdb -outfmt 6 -out blastn.tsv >> blast.log 2>&1; check $? "blastn"

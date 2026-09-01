@@ -90,7 +90,7 @@ RUN curl -Ls "https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSIO
 #   sysroot locale-archive          - two copies of a 213MB glibc locale archive, used
 #                                     only when cross-compiling; the container's own
 #                                     locale lives in /usr and is untouched
-#   jvm/lib/src.zip                 - JDK sources beside the JRE that Canu runs on
+#   jvm/lib/src.zip                 - JDK sources beside the JRE that FastQC runs on
 #
 # Shared libraries are deliberately NOT touched: the toolchain directory holds the
 # boost .so files Augustus links against at run time, so deleting it wholesale leaves
