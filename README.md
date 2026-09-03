@@ -230,6 +230,18 @@ do
     rm /home/shared/training$i/level1.tar.gz
     chmod -R go+rw /home/shared/training$i/level1
 done
+
+# Level 2 data and permissions
+tar -xzf 2026_level2.tar.gz
+mv 2026_level2/ level2/
+
+for i in {1..11};
+do
+    echo $i
+    cp -r level2/ /home/shared/training${i}/
+done
+
+find /home/shared/training*/level2/ -type d -exec chmod 775 {} +
 ```
 
 Permissions for `trainer` accounts don't allow the copying, so every trainer account must
